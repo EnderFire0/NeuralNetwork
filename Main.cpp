@@ -91,7 +91,8 @@ bool hit_or_stand(float playerScore, int aces, int dealerShowing, NeuralNetwork*
 	return output[0] > output[1];
 }
 
-int blackjack_game(NeuralNetwork* network) {
+//proof of concept scoring function
+float blackjack_game(NeuralNetwork* network) {
 	deck->shuffle();
 
 	std::vector<int> playerHand, dealerHand = {};
@@ -122,6 +123,15 @@ int blackjack_game(NeuralNetwork* network) {
 	if (score_blackjack_hand(dealerHand) > playerScore) { return -1; }
 	else if (score_blackjack_hand(dealerHand) < playerScore) { return 1; }
 	else { return 0; }
+
+}
+
+
+float score_func(NeuralNetwork* network) {
+	//scoring function goes here
+
+	//just a proof of concept function, feel free to rip it out when making you're own
+	return blackjack_game(network);
 }
 
 int main() {
@@ -135,7 +145,7 @@ int main() {
 			NeuralNetwork* test_member = base->duplicate();
 			test_member->random_tune_network(5/std::sqrt(generation + 1));
 			for (int trial = 0; trial < 10000; trial++) {
-				test_member->modify_score(blackjack_game(test_member));
+				test_member->modify_score(score_func(test_member));
 			}
 			if (best == nullptr) {
 				best = test_member;
