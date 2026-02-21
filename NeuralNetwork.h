@@ -7,7 +7,7 @@ class NeuralNetwork {
 private:
 	std::vector<NeuronLayer*> layers;
 	int size;
-	int score;
+	float score;
 public:
 	NeuralNetwork(std::vector<int> shape);
 	~NeuralNetwork();
@@ -15,8 +15,8 @@ public:
 	void update_network();
 	void append_layer(NeuronLayer* layer);
 	void set_inputs(std::vector<float> inputs);
-	void set_score(int score);
-	void modify_score(int score);
+	void reset_score();
+	void modify_score(float score);
 	void insert_layer(NeuronLayer* layer, int index);
 	void random_tune_network(float strength);
 	void print_structure();
@@ -28,6 +28,7 @@ public:
 	std::vector<float> read_output();
 
 	NeuralNetwork* duplicate();
+	NeuralNetwork* train(float(*scoreFunc)(NeuralNetwork*), int genCount, int countPerGen);
 };
 
 #endif

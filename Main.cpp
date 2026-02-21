@@ -140,35 +140,8 @@ float score_func(NeuralNetwork* network) {
 
 int main() {
 	NeuralNetwork* base = new NeuralNetwork({ 3, 7, 9, 7, 2 });
-	NeuralNetwork* best = nullptr;
 
-	for (int generation = 0; generation < 100; generation++) {
-		std::cout << "Generation: " << generation << "\n";
-
-		for (int member = 0; member < 200; member++) {
-			NeuralNetwork* test_member = base->duplicate();
-			test_member->random_tune_network(5/std::sqrt(generation + 1));
-			test_member->modify_score(score_func(test_member));
-			if (best == nullptr) {
-				best = test_member;
-				continue;
-			}
-			if (best->get_score() < test_member->get_score()) {
-				delete(best);
-				best = test_member;
-			}
-			else {
-				delete(test_member);
-			}
-		}
-		if (best != nullptr) {
-			std::cout << "Best score: " << best->get_score() << "\n";
-			delete(base);
-			base = best;
-			base->reset_score();
-			best = nullptr;
-		}
-	}
+	base->train(score_func, 100, 200);
 
 	base->print_structure();
 

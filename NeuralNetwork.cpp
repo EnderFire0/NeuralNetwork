@@ -34,11 +34,11 @@ void NeuralNetwork::set_inputs(std::vector<float> inputs) {
 	this->layers.at(0)->set_neuron_values(inputs);
 }
 
-void NeuralNetwork::set_score(int score) {
-	this->score = score;
+void NeuralNetwork::reset_score() {
+	this->score = 0;
 }
 
-void NeuralNetwork::modify_score(int score) {
+void NeuralNetwork::modify_score(float score) {
 	this->score += score;
 }
 
@@ -114,4 +114,35 @@ NeuralNetwork* NeuralNetwork::duplicate() {
 	}
 
 	return copy;
+}
+
+NeuralNetwork* NeuralNetwork::train(float(*scoreFunc)(NeuralNetwork*), int genCount, int countPerGen) {
+	NeuralNetwork* base = this->duplicate();
+	NeuralNetwork* best = nullptr;
+
+	for (int generation = 0; generation < genCount; generation++) {
+		for (int member = 0; member < countPerGen; member++) {
+			NeuralNetwork* test_member = base->duplicate();
+			test_member->random_tune_network(5);
+
+			test_member->modify_score(scoreFunc(test_member));
+			if (best == nullptr) {
+				best = test_member;
+				continue;
+			}
+			if (best->get_score() < test_member->get_score()) {
+				delete(best);
+				best = test_member;
+			}
+			else {
+				delete(test_member);
+			}
+		}
+		if (best != nullptr) {
+			delete(base);
+			base = best;
+			base->reset_score();
+			best = nullptr;
+		}
+	}
 }
