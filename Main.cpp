@@ -131,7 +131,11 @@ float score_func(NeuralNetwork* network) {
 	//scoring function goes here
 
 	//just a proof of concept function, feel free to rip it out when making you're own
-	return blackjack_game(network);
+	float score = 0;
+	for (int i = 0; i < 10000; i++) {
+		score += blackjack_game(network);
+	}
+	return score;
 }
 
 int main() {
@@ -144,9 +148,7 @@ int main() {
 		for (int member = 0; member < 200; member++) {
 			NeuralNetwork* test_member = base->duplicate();
 			test_member->random_tune_network(5/std::sqrt(generation + 1));
-			for (int trial = 0; trial < 10000; trial++) {
-				test_member->modify_score(score_func(test_member));
-			}
+			test_member->modify_score(score_func(test_member));
 			if (best == nullptr) {
 				best = test_member;
 				continue;
@@ -163,7 +165,7 @@ int main() {
 			std::cout << "Best score: " << best->get_score() << "\n";
 			delete(base);
 			base = best;
-			base->set_score(0);
+			base->reset_score();
 			best = nullptr;
 		}
 	}
