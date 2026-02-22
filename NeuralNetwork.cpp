@@ -1,5 +1,6 @@
 #include "NeuralNetwork.h"
 #include <iostream>
+#include <algorithm>
 
 NeuralNetwork::NeuralNetwork(std::vector<int> shape) {
 	this->layers = {};
@@ -116,33 +117,75 @@ NeuralNetwork* NeuralNetwork::duplicate() {
 	return copy;
 }
 
-NeuralNetwork* NeuralNetwork::train(float(*scoreFunc)(NeuralNetwork*), int genCount, int countPerGen) {
-	NeuralNetwork* base = this->duplicate();
-	NeuralNetwork* best = nullptr;
+NeuralNetwork* NeuralNetwork::train(float(*scoreFunc)(NeuralNetwork*), int genCount, int countPerGen, int parentCount, float(*tuneStrengthFunc)(int)) {
+	if (parentCount < 1) { return; }
+
+	struct
+	{
+		bool operator()(NeuralNetwork* a, NeuralNetwork* b) const { return a->get_score() < b->get_score(); }
+	}
+	sortingObj;
+	
+	NeuralNetwork* templateNet = this->duplicate();
 
 	for (int generation = 0; generation < genCount; generation++) {
+
+		std::vector<NeuralNetwork*> parents = {};
+		for (int i = 0; i < parentCount; i++) { parents.push_back(nullptr); }
+
+
 		for (int member = 0; member < countPerGen; member++) {
-			NeuralNetwork* test_member = base->duplicate();
-			test_member->random_tune_network(5);
+			NeuralNetwork* test_member = templateNet->duplicate();
+			test_member->random_tune_network(tuneStrengthFunc(generation));
 
 			test_member->modify_score(scoreFunc(test_member));
-			if (best == nullptr) {
-				best = test_member;
-				continue;
+			for (int net = 0; net < parentCount; net++) {
+				if (parents.at(net) == nullptr) {
+					parents.at(net) = test_member;
+					break;
+				}
 			}
-			if (best->get_score() < test_member->get_score()) {
-				delete(best);
-				best = test_member;
-			}
-			else {
-				delete(test_member);
+			if (member >= parentCount) {
+				std::sort(parents.begin(), parents.end(), sortingObj);
+				for (int net = 0; net < parentCount; net++) {
+					if (parents.at(net)->get_score() < test_member->get_score()) {
+						delete(parents.at(net));
+						parents.at(net) = test_member;
+					}
+					else {
+						delete(test_member);
+					}
+				}
+
 			}
 		}
-		if (best != nullptr) {
-			delete(base);
-			base = best;
-			base->reset_score();
-			best = nullptr;
+		//just ripped from NeuralNetwork::duplicate since I know that works well enough
+		NeuralNetwork* copy = new NeuralNetwork(templateNet->get_shape());
+		
+		for (NeuralNetwork* parent : parents) {
+
+			std::vector<std::vector<NeuronConnection*>> connections;
+			for (int layer = 0; layer < parent->size; layer++) {
+
+				connections = parent->layers[layer]->get_connections();
+				std::vector<Neuron*> copyLayerNeurons = copy->layers[layer]->get_neurons();
+
+				for (int neuron = 0; neuron < connections.size(); neuron++) {
+
+					std::vector<NeuronConnection*> copyConnections = copyLayerNeurons[neuron]->get_connections();
+
+					for (int connection = 0; connection < connections[neuron].size(); connection++) {
+						copyConnections[connection]->weight += (connections[neuron][connection]->weight)/parentCount;
+						copyConnections[connection]->bias += (connections[neuron][connection]->bias)/parentCount;
+					}
+				}
+			}
+			delete(parent);
 		}
+		delete(templateNet);
+		templateNet = copy;
+
 	}
+
+	return templateNet;
 }

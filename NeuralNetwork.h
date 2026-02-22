@@ -3,6 +3,10 @@
 
 #include "NeuronLayer.h"
 
+float defaultTuneStr(int gen) {
+	return 1;
+};
+
 class NeuralNetwork {
 private:
 	std::vector<NeuronLayer*> layers;
@@ -28,7 +32,7 @@ public:
 	std::vector<float> read_output();
 
 	NeuralNetwork* duplicate();
-	NeuralNetwork* train(float(*scoreFunc)(NeuralNetwork*), int genCount, int countPerGen);
+	NeuralNetwork* train(float(*scoreFunc)(NeuralNetwork*), int genCount, int countPerGen, int parentCount, float(*tuneStrengthFunc)(int) = defaultTuneStr);
 };
 
 #endif

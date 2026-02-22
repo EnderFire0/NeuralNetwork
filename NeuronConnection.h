@@ -9,7 +9,7 @@ public:
 	float weight;
 	float bias;
 
-	NeuronConnection(Neuron* i = nullptr, float w = 1, float b = 0);
+	NeuronConnection(Neuron* i = nullptr, float w = 0, float b = 0);
 	void random_tune(float strength);
 };
 
