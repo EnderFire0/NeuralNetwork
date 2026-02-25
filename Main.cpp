@@ -132,7 +132,7 @@ float score_func(NeuralNetwork* network) {
 
 	//just a proof of concept function, feel free to rip it out when making you're own
 	float score = 0;
-	for (int i = 0; i < 10000; i++) {
+	for (int i = 0; i < 1000; i++) {
 		score += blackjack_game(network);
 	}
 	return score;
@@ -141,9 +141,9 @@ float score_func(NeuralNetwork* network) {
 int main() {
 	NeuralNetwork* base = new NeuralNetwork({ 3, 7, 9, 7, 2 });
 
-	base->train(score_func, 100, 200);
+	base->train(score_func, 100, 200, 3);
 
-	base->print_structure();
-
+	std::cout << base->print_structure();
+	
 	return 0;
 }

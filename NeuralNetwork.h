@@ -2,37 +2,37 @@
 #define NEURALNETWORK_H
 
 #include "NeuronLayer.h"
-
-float defaultTuneStr(int gen) {
-	return 1;
-};
+#include <string>
 
 class NeuralNetwork {
 private:
 	std::vector<NeuronLayer*> layers;
+	std::vector<int> shape;
 	int size;
-	float score;
+	float fitness;
 public:
 	NeuralNetwork(std::vector<int> shape);
+	NeuralNetwork(const NeuralNetwork& network);
 	~NeuralNetwork();
+	NeuralNetwork& operator= (const NeuralNetwork& network);
 
 	void update_network();
 	void append_layer(NeuronLayer* layer);
 	void set_inputs(std::vector<float> inputs);
-	void reset_score();
-	void modify_score(float score);
+	void reset_fitness();
+	void modify_fitness(float fitness);
 	void insert_layer(NeuronLayer* layer, int index);
 	void random_tune_network(float strength);
-	void print_structure();
 
-	int get_score();
+	std::string print_structure();
+
+	int get_fitness();
 
 	std::vector<int> get_shape();
 
 	std::vector<float> read_output();
 
-	NeuralNetwork* duplicate();
-	NeuralNetwork* train(float(*scoreFunc)(NeuralNetwork*), int genCount, int countPerGen, int parentCount, float(*tuneStrengthFunc)(int) = defaultTuneStr);
+	NeuralNetwork* train(float(*fitnessFunc)(NeuralNetwork*), int genCount, int countPerGen, int parentCount = 1, float(*tuneFunc)(int) = nullptr);
 };
 
 #endif

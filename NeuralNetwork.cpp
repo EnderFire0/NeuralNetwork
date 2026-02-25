@@ -2,18 +2,84 @@
 #include <iostream>
 #include <algorithm>
 
+float defaultTuneStr(int gen) {
+	return 1;
+};
+
 NeuralNetwork::NeuralNetwork(std::vector<int> shape) {
 	this->layers = {};
+	this->shape = {};
 	this->size = 0;
 	for (int i : shape) {
 		this->append_layer(new NeuronLayer(i));
 	}
 }
 
+NeuralNetwork::NeuralNetwork(const NeuralNetwork& network) {
+	this->layers = {};
+	this->size = 0;
+	this->shape = {};
+	this->fitness = network.fitness;
+	for (int i : network.shape) {
+		this->append_layer(new NeuronLayer(i));
+	}
+
+	std::vector<std::vector<NeuronConnection*>> connections;
+	for (int layer = 0; layer < network.size; layer++) {
+
+		connections = network.layers[layer]->get_connections();
+		std::vector<Neuron*> copyLayerNeurons = this->layers[layer]->get_neurons();
+
+		for (int neuron = 0; neuron < connections.size(); neuron++) {
+
+			std::vector<NeuronConnection*> copyConnections = copyLayerNeurons[neuron]->get_connections();
+
+			for (int connection = 0; connection < connections[neuron].size(); connection++) {
+				copyConnections[connection]->weight = connections[neuron][connection]->weight;
+				copyConnections[connection]->bias = connections[neuron][connection]->bias;
+			}
+		}
+	}
+
+}
+
 NeuralNetwork::~NeuralNetwork() {
 	for (int i = this->size - 1; i > 0; i--) {
 		delete(this->layers[i]);
 	}
+}
+
+NeuralNetwork& NeuralNetwork::operator= (const NeuralNetwork& network) {
+	for (int i = this->size - 1; i > 0; i--) {
+		delete(this->layers[i]);
+		this->layers.pop_back();
+	}
+
+	this->size = 0;
+	this->shape = {};
+	this->fitness = network.fitness;
+	for (int i : network.shape) {
+		this->append_layer(new NeuronLayer(i));
+	}
+
+	std::vector<std::vector<NeuronConnection*>> connections;
+	for (int layer = 0; layer < network.size; layer++) {
+
+		connections = network.layers[layer]->get_connections();
+		std::vector<Neuron*> copyLayerNeurons = this->layers[layer]->get_neurons();
+
+		for (int neuron = 0; neuron < connections.size(); neuron++) {
+
+			std::vector<NeuronConnection*> copyConnections = copyLayerNeurons[neuron]->get_connections();
+
+			for (int connection = 0; connection < connections[neuron].size(); connection++) {
+				copyConnections[connection]->weight = connections[neuron][connection]->weight;
+				copyConnections[connection]->bias = connections[neuron][connection]->bias;
+			}
+		}
+	}
+
+	return *this;
 }
 
 void NeuralNetwork::update_network() {
@@ -28,6 +94,7 @@ void NeuralNetwork::append_layer(NeuronLayer* layer) {
 		layer->connect_input_layer(this->layers.back());
 	}
 	this->layers.push_back(layer);
+	this->shape.push_back(layer->get_size());
 	this->size++;
 }
 
@@ -35,12 +102,12 @@ void NeuralNetwork::set_inputs(std::vector<float> inputs) {
 	this->layers.at(0)->set_neuron_values(inputs);
 }
 
-void NeuralNetwork::reset_score() {
-	this->score = 0;
+void NeuralNetwork::reset_fitness() {
+	this->fitness = 0;
 }
 
-void NeuralNetwork::modify_score(float score) {
-	this->score += score;
+void NeuralNetwork::modify_fitness(float fitness) {
+	this->fitness += fitness;
 }
 
 //inserts the layer to be at index # "index", e.g. if layers = {a, b, c}, insert_layer(l, 1) -> layers = {a, l, b, c}
@@ -65,23 +132,25 @@ void NeuralNetwork::random_tune_network(float strength) {
 	}
 }
 
-int NeuralNetwork::get_score() {
-	return this->score;
+int NeuralNetwork::get_fitness() {
+	return this->fitness;
 }
 
-void NeuralNetwork::print_structure() {
-	std::cout << "Structure:\n";
+std::string NeuralNetwork::print_structure() {
+	std::string output = "";
+	output = output + "Structure:\n";
 	for (int i = 1; i < this->size; i++) {
-		std::cout << "Layer " << i << ":\n";
+		output = output + "Layer " + std::to_string(i) + ":\n";
 		for (int o = 0; o < this->layers[i]->get_size(); o++) {
-			std::cout << "Neuron " << o << ": ";
+			output = output + "Neuron " + std::to_string(o) + ": ";
 			std::vector<NeuronConnection*> connections = this->layers[i]->get_neurons()[o]->get_connections();
 			for (int u = 0; u < connections.size(); u++) {
-				std::cout << "(" << connections[u]->weight << ", " << connections[u]->bias << ") ";
+				output = output + "(" + std::to_string(connections[u]->weight) + ", " + std::to_string(connections[u]->bias) + ") ";
 			}
-			std::cout << "\n";
+			output = output + "\n";
 		}
 	}
+	return output;
 }
 
 std::vector<int> NeuralNetwork::get_shape() {
@@ -94,39 +163,17 @@ std::vector<float> NeuralNetwork::read_output() {
 	return this->layers.back()->read_neurons();
 }
 
-NeuralNetwork* NeuralNetwork::duplicate() {
-	NeuralNetwork* copy = new NeuralNetwork(this->get_shape());
-
-	std::vector<std::vector<NeuronConnection*>> connections;
-	for (int layer = 0; layer < this->size; layer++) {
-
-		connections = this->layers[layer]->get_connections();
-		std::vector<Neuron*> copyLayerNeurons = copy->layers[layer]->get_neurons();
-
-		for (int neuron = 0; neuron < connections.size(); neuron++) {
-
-			std::vector<NeuronConnection*> copyConnections = copyLayerNeurons[neuron]->get_connections();
-
-			for (int connection = 0; connection < connections[neuron].size(); connection++) {
-				copyConnections[connection]->weight = connections[neuron][connection]->weight;
-				copyConnections[connection]->bias = connections[neuron][connection]->bias;
-			}
-		}
-	}
-
-	return copy;
-}
-
-NeuralNetwork* NeuralNetwork::train(float(*scoreFunc)(NeuralNetwork*), int genCount, int countPerGen, int parentCount, float(*tuneStrengthFunc)(int)) {
-	if (parentCount < 1) { return; }
+NeuralNetwork* NeuralNetwork::train(float(*fitnessFunc)(NeuralNetwork*), int genCount, int countPerGen, int parentCount, float(*tuneStrengthFunc)(int)) {
+	if (parentCount < 1) { return nullptr; }
+	if (tuneStrengthFunc == nullptr) { tuneStrengthFunc = defaultTuneStr; }
 
 	struct
 	{
-		bool operator()(NeuralNetwork* a, NeuralNetwork* b) const { return a->get_score() < b->get_score(); }
+		bool operator()(NeuralNetwork* a, NeuralNetwork* b) const { return a->get_fitness() < b->get_fitness(); }
 	}
 	sortingObj;
 	
-	NeuralNetwork* templateNet = this->duplicate();
+	NeuralNetwork* templateNet = new NeuralNetwork(*this);
 
 	for (int generation = 0; generation < genCount; generation++) {
 
@@ -135,31 +182,35 @@ NeuralNetwork* NeuralNetwork::train(float(*scoreFunc)(NeuralNetwork*), int genCo
 
 
 		for (int member = 0; member < countPerGen; member++) {
-			NeuralNetwork* test_member = templateNet->duplicate();
+			NeuralNetwork* test_member = new NeuralNetwork(*templateNet);
 			test_member->random_tune_network(tuneStrengthFunc(generation));
 
-			test_member->modify_score(scoreFunc(test_member));
-			for (int net = 0; net < parentCount; net++) {
-				if (parents.at(net) == nullptr) {
-					parents.at(net) = test_member;
-					break;
+			test_member->modify_fitness(fitnessFunc(test_member));
+			
+			if (member < parentCount) {
+				for (int net = 0; net < parentCount; net++) {
+					if (parents.at(net) == nullptr) {
+						parents.at(net) = test_member;
+						break;
+					}
 				}
 			}
 			if (member >= parentCount) {
 				std::sort(parents.begin(), parents.end(), sortingObj);
 				for (int net = 0; net < parentCount; net++) {
-					if (parents.at(net)->get_score() < test_member->get_score()) {
-						delete(parents.at(net));
+					if (parents.at(net)->get_fitness() < test_member->get_fitness()) {
+						delete(parents[net]);
 						parents.at(net) = test_member;
+						break;
 					}
-					else {
+					if (net = parentCount - 1) {
 						delete(test_member);
 					}
 				}
-
 			}
+			
 		}
-		//just ripped from NeuralNetwork::duplicate since I know that works well enough
+		//slightly modified from copy constructor since I know that works well enough
 		NeuralNetwork* copy = new NeuralNetwork(templateNet->get_shape());
 		
 		for (NeuralNetwork* parent : parents) {
@@ -182,9 +233,9 @@ NeuralNetwork* NeuralNetwork::train(float(*scoreFunc)(NeuralNetwork*), int genCo
 			}
 			delete(parent);
 		}
+
 		delete(templateNet);
 		templateNet = copy;
-
 	}
 
 	return templateNet;
