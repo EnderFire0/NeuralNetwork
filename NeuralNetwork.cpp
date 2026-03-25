@@ -2,9 +2,13 @@
 #include <iostream>
 #include <algorithm>
 
-float defaultTuneStr(int gen) {
-	return 1;
-};
+const static struct
+{
+	bool operator()(NeuralNetwork* a, NeuralNetwork* b) const { return a->get_fitness() < b->get_fitness(); }
+}
+sortingObj;
+
+static float CONSTANT_ONE(int gen) { return 1; }
 
 NeuralNetwork::NeuralNetwork(std::vector<int> shape) {
 	this->layers = {};
@@ -132,11 +136,7 @@ void NeuralNetwork::random_tune_network(float strength) {
 	}
 }
 
-int NeuralNetwork::get_fitness() {
-	return this->fitness;
-}
-
-std::string NeuralNetwork::print_structure() {
+const std::string NeuralNetwork::get_structure() {
 	std::string output = "";
 	output = output + "Structure:\n";
 	for (int i = 1; i < this->size; i++) {
@@ -153,25 +153,19 @@ std::string NeuralNetwork::print_structure() {
 	return output;
 }
 
-std::vector<int> NeuralNetwork::get_shape() {
+const std::vector<int> NeuralNetwork::get_shape() {
 	std::vector<int> shape = {};
 	for (int i = 0; i < this->size; i++) { shape.push_back(this->layers[i]->get_size()); }
 	return shape;
 }
 
-std::vector<float> NeuralNetwork::read_output() {
+const std::vector<float> NeuralNetwork::read_output() {
 	return this->layers.back()->read_neurons();
 }
 
 NeuralNetwork* NeuralNetwork::train(float(*fitnessFunc)(NeuralNetwork*), int genCount, int countPerGen, int parentCount, float(*tuneStrengthFunc)(int)) {
 	if (parentCount < 1) { return nullptr; }
-	if (tuneStrengthFunc == nullptr) { tuneStrengthFunc = defaultTuneStr; }
-
-	struct
-	{
-		bool operator()(NeuralNetwork* a, NeuralNetwork* b) const { return a->get_fitness() < b->get_fitness(); }
-	}
-	sortingObj;
+	if (!tuneStrengthFunc) { tuneStrengthFunc = CONSTANT_ONE; }
 	
 	NeuralNetwork* templateNet = new NeuralNetwork(*this);
 
@@ -185,33 +179,22 @@ NeuralNetwork* NeuralNetwork::train(float(*fitnessFunc)(NeuralNetwork*), int gen
 			NeuralNetwork* test_member = new NeuralNetwork(*templateNet);
 			test_member->random_tune_network(tuneStrengthFunc(generation));
 
-			test_member->modify_fitness(fitnessFunc(test_member));
+			test_member->fitness = fitnessFunc(test_member);
 			
 			if (member < parentCount) {
-				for (int net = 0; net < parentCount; net++) {
-					if (parents.at(net) == nullptr) {
-						parents.at(net) = test_member;
-						break;
-					}
-				}
+				parents.at(member) = test_member;
 			}
-			if (member >= parentCount) {
+			else {
 				std::sort(parents.begin(), parents.end(), sortingObj);
-				for (int net = 0; net < parentCount; net++) {
-					if (parents.at(net)->get_fitness() < test_member->get_fitness()) {
-						delete(parents[net]);
-						parents.at(net) = test_member;
-						break;
-					}
-					if (net = parentCount - 1) {
-						delete(test_member);
-					}
+				if (parents.at(0)->fitness < test_member->fitness) {
+					delete(parents.at(0));
+					parents.at(0) = test_member;
 				}
 			}
 			
 		}
 		//slightly modified from copy constructor since I know that works well enough
-		NeuralNetwork* copy = new NeuralNetwork(templateNet->get_shape());
+		NeuralNetwork* copy = new NeuralNetwork(templateNet->shape);
 		
 		for (NeuralNetwork* parent : parents) {
 
@@ -237,6 +220,7 @@ NeuralNetwork* NeuralNetwork::train(float(*fitnessFunc)(NeuralNetwork*), int gen
 		delete(templateNet);
 		templateNet = copy;
 	}
+	templateNet->fitness = fitnessFunc(templateNet);
 
 	return templateNet;
 }

@@ -141,9 +141,9 @@ float score_func(NeuralNetwork* network) {
 int main() {
 	NeuralNetwork* base = new NeuralNetwork({ 3, 7, 9, 7, 2 });
 
-	base->train(score_func, 100, 200, 3);
+	NeuralNetwork* trained = base->train(score_func, 100, 200, 3);
 
-	std::cout << base->print_structure();
+	std::cout << trained->get_structure() << "\n" << trained->get_fitness();
 	
 	return 0;
 }

@@ -24,13 +24,13 @@ public:
 	void insert_layer(NeuronLayer* layer, int index);
 	void random_tune_network(float strength);
 
-	std::string print_structure();
+	const std::string get_structure();
 
-	int get_fitness();
+	const float get_fitness() { return this->fitness; };
 
-	std::vector<int> get_shape();
+	const std::vector<int> get_shape();
 
-	std::vector<float> read_output();
+	const std::vector<float> read_output();
 
 	NeuralNetwork* train(float(*fitnessFunc)(NeuralNetwork*), int genCount, int countPerGen, int parentCount = 1, float(*tuneFunc)(int) = nullptr);
 };
