@@ -22,7 +22,7 @@
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{97c7dca3-2634-44a5-b3fa-95c13b8a3859}</ProjectGuid>
-    <RootNamespace>BlackjackNeuralNetwork</RootNamespace>
+    <RootNamespace>NeuralNetwork</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
