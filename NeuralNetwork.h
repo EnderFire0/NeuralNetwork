@@ -32,7 +32,7 @@ public:
 
 	const std::vector<float> read_output();
 
-	NeuralNetwork* train(float(*fitnessFunc)(NeuralNetwork*), int genCount, int countPerGen, int parentCount = 1, float(*tuneFunc)(int) = nullptr);
+	NeuralNetwork* train(float(*fitnessFunc)(NeuralNetwork*), int genCount, int countPerGen, int parentCount = 1, float(*tuneFunc)(int, NeuralNetwork*) = nullptr);
 };
 
 #endif

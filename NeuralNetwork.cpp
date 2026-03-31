@@ -8,7 +8,7 @@ const static struct
 }
 sortingObj;
 
-static float CONSTANT_ONE(int gen) { return 1; }
+static float CONSTANT_ONE(int gen, NeuralNetwork* net) { return 1; }
 
 NeuralNetwork::NeuralNetwork(std::vector<int> shape) {
 	this->layers = {};
@@ -163,7 +163,7 @@ const std::vector<float> NeuralNetwork::read_output() {
 	return this->layers.back()->read_neurons();
 }
 
-NeuralNetwork* NeuralNetwork::train(float(*fitnessFunc)(NeuralNetwork*), int genCount, int countPerGen, int parentCount, float(*tuneStrengthFunc)(int)) {
+NeuralNetwork* NeuralNetwork::train(float(*fitnessFunc)(NeuralNetwork*), int genCount, int countPerGen, int parentCount, float(*tuneStrengthFunc)(int, NeuralNetwork*)) {
 	if (parentCount < 1) { return nullptr; }
 	if (!tuneStrengthFunc) { tuneStrengthFunc = CONSTANT_ONE; }
 	
@@ -177,7 +177,7 @@ NeuralNetwork* NeuralNetwork::train(float(*fitnessFunc)(NeuralNetwork*), int gen
 
 		for (int member = 0; member < countPerGen; member++) {
 			NeuralNetwork* test_member = new NeuralNetwork(*templateNet);
-			test_member->random_tune_network(tuneStrengthFunc(generation));
+			test_member->random_tune_network(tuneStrengthFunc(generation, test_member));
 
 			test_member->fitness = fitnessFunc(test_member);
 			
