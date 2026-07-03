@@ -79,10 +79,10 @@ float score_blackjack_hand(std::vector<int> hand) {
 }
 
 bool hit_or_stand(float playerScore, int aces, int dealerShowing, NeuralNetwork* network) {
-	/*std::vector<float> neuron_values = {float(dealerShowing)};
-	for (int i = 0; i < playerHand.size(); i++) { neuron_values.push_back(playerHand.at(i)); }
-	while (neuron_values.size() < 9) { neuron_values.push_back(0); }
-	network->set_inputs(neuron_values);*/
+	/*std::vector<float> neuron_activations = {float(dealerShowing)};
+	for (int i = 0; i < playerHand.size(); i++) { neuron_activations.push_back(playerHand.at(i)); }
+	while (neuron_activations.size() < 9) { neuron_activations.push_back(0); }
+	network->set_inputs(neuron_activations);*/
 
 	network->set_inputs(std::vector<float> {playerScore, float(aces), float(dealerShowing)});
 	network->update_network();

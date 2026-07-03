@@ -18,7 +18,7 @@ NeuronLayer::~NeuronLayer() {
 
 void NeuronLayer::update_layer() {
 	for (int i = 0; i < this->size; i++) {
-		this->neurons[i]->update_value();
+		this->neurons[i]->update_activation();
 	}
 }
 
@@ -37,14 +37,14 @@ void NeuronLayer::disconnect_input_layer() {
 	}
 }
 
-void NeuronLayer::set_neuron_values(std::vector<float> values) {
-	if (values.size() == size) {
+void NeuronLayer::set_neuron_activations(std::vector<float> activations) {
+	if (activations.size() == size) {
 		for (int i = 0; i < size; i++) {
-			this->neurons[i]->set_value(values[i]);
+			this->neurons[i]->set_activation(activations[i]);
 		}
 	}
 	else {
-		std::cout << "Unable to set layer neuron values: Incorrect number of values\n";
+		std::cout << "Unable to set layer neuron activations: Incorrect number of activations\n";
 	}
 }
 

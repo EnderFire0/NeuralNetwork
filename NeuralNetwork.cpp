@@ -103,7 +103,7 @@ void NeuralNetwork::append_layer(NeuronLayer* layer) {
 }
 
 void NeuralNetwork::set_inputs(std::vector<float> inputs) {
-	this->layers.at(0)->set_neuron_values(inputs);
+	this->layers.at(0)->set_neuron_activations(inputs);
 }
 
 void NeuralNetwork::reset_fitness() {

@@ -2,7 +2,7 @@
 
 Neuron::Neuron() {
 	this->inputs = {};
-	this->value = 0;
+	this->activation = 0;
 }
 
 Neuron::~Neuron() {
@@ -11,18 +11,18 @@ Neuron::~Neuron() {
 	}
 }
 
-void Neuron::update_value() {
+void Neuron::update_activation() {
 	//in case that input layer get updated, avoids erroring
 	if (this->inputs.size() > 0) {
-		this->value = 0;
+		this->activation = 0;
 		for (int i = 0; i < this->inputs.size(); i++) {
-			this->value += (this->inputs[i]->input->value * this->inputs[i]->weight) + this->inputs[i]->bias;
+			this->activation += (this->inputs[i]->input->activation * this->inputs[i]->weight) + this->inputs[i]->bias;
 		}
 	}
 }
 
-void Neuron::set_value(float value) {
-	this->value = value;
+void Neuron::set_activation(float activation) {
+	this->activation = activation;
 }
 
 void Neuron::connect_neuron(Neuron* neuron, float weight, float bias) {
@@ -44,7 +44,7 @@ void Neuron::random_tune_connections(float strength) {
 }
 
 float Neuron::read() {
-	return this->value;
+	return this->activation;
 }
 
 std::vector<NeuronConnection*> Neuron::get_connections() {
