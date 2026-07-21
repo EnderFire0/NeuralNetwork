@@ -76,14 +76,6 @@ std::vector<float> NeuronLayer::read_neurons() {
 	return output;
 }
 
-std::vector<std::vector<Neuron*>> NeuronLayer::get_connections() {
-	std::vector<std::vector<Neuron*>> connections = {};
-	for (int i = 0; i < this->size; i++) {
-		connections.push_back(this->neurons[i]->inputs);
-	}
-	return connections;
-}
-
 std::vector<Neuron*> NeuronLayer::get_neurons() {
 	return this->neurons;
 }

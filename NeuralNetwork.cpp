@@ -28,21 +28,18 @@ NeuralNetwork::NeuralNetwork(const NeuralNetwork& network) {
 		this->append_layer(new NeuronLayer(i));
 	}
 
-	std::vector<std::vector<Neuron*>> connections;
 	for (int layer = 0; layer < network.size; layer++) {
-
-		connections = network.layers[layer]->get_connections();
 		std::vector<Neuron*> copyLayerNeurons = this->layers[layer]->get_neurons();
 		std::vector<Neuron*> neurons = network.layers[layer]->get_neurons();
 
-		for (int neuron = 0; neuron < connections.size(); neuron++) {
+		for (int neu = 0; neu < neurons.size(); neu++) {
+			Neuron* copyNeuron = copyLayerNeurons[neu];
+			Neuron* neuron = neurons[neu];
 
-			std::vector<Neuron*> copyConnections = copyLayerNeurons[neuron]->inputs;
-
-			copyLayerNeurons[neuron]->bias = neurons[neuron]->bias;
-			for (int wght = 0; wght < neurons[neuron]->inputs.size(); wght++) {
-				copyLayerNeurons[neuron]->weights[wght] = neurons[neuron]->weights[wght];
+			for (int wght = 0; wght < neuron->weights.size(); wght++) {
+				copyNeuron->weights[wght] = neuron->weights[wght];
 			}
+			copyNeuron->bias = neuron->bias;
 		}
 	}
 
@@ -67,21 +64,18 @@ NeuralNetwork& NeuralNetwork::operator= (const NeuralNetwork& network) {
 		this->append_layer(new NeuronLayer(i));
 	}
 
-	std::vector<std::vector<Neuron*>> connections;
 	for (int layer = 0; layer < network.size; layer++) {
-
-		connections = network.layers[layer]->get_connections();
 		std::vector<Neuron*> copyLayerNeurons = this->layers[layer]->get_neurons();
 		std::vector<Neuron*> neurons = network.layers[layer]->get_neurons();
 
-		for (int neuron = 0; neuron < connections.size(); neuron++) {
+		for (int neu = 0; neu < neurons.size(); neu++) {
+			Neuron* copyNeuron = copyLayerNeurons[neu];
+			Neuron* neuron = neurons[neu];
 
-			std::vector<Neuron*> copyConnections = copyLayerNeurons[neuron]->inputs;
-
-			copyLayerNeurons[neuron]->bias = neurons[neuron]->bias;
-			for (int connection = 0; connection < connections[neuron].size(); connection++) {
-				copyLayerNeurons[neuron]->weights[connection] = neurons[neuron]->weights[connection];
+			for (int wght = 0; wght < neuron->weights.size(); wght++) {
+				copyNeuron->weights[wght] = neuron->weights[wght];
 			}
+			copyNeuron->bias = neuron->bias;
 		}
 	}
 
@@ -177,19 +171,21 @@ void NeuralNetwork::load_from_file(std::string filename) {
 		f.seekg(4 + intSize * layerCount, std::ios::beg);//4 comes from the four bytes used to store intSize, floatSize, and layerCount
 
 		//looping through layers
-		//start at layer 1 as layer 0 has no information(connections)
+		//start at layer 1 as layer 0 has no information(weights/biases)
 		for (int lyr = 1; lyr < layerCount; lyr++) {
 			//looping through neurons
 			NeuronLayer* layer = this->layers.at(lyr);
+			std::vector<Neuron*> layerNeurons = layer->get_neurons();
 			for (int neu = 0; neu < layer->get_size(); neu++) {
-				//looping through connections
-				Neuron* neuron = layer->get_neurons().at(neu);
-				for (int con = 0; con < neuron->inputs.size(); con++) {
+				//looping through connection weights
+				Neuron* neuron = layerNeurons.at(neu);
+				std::vector<float> weights = neuron->weights;
+				for (int wght = 0; wght < neuron->inputs.size(); wght++) {
 					if (!f) { std::cout << "Bad file read\nfail: " << f.fail() << "\nbad: " << f.bad() << "\neof: " << f.eof() << "\n"; f.close(); return; }
-					Neuron* connection = neuron->inputs.at(con);
-					//reading neural connection info
-					f.read(reinterpret_cast<char*>(&(neuron->weights.at(con))), floatSize);
+					//reading neural connection weight data
+					f.read(reinterpret_cast<char*>(&(weights.at(wght))), floatSize);
 				}
+				//neuron bias data
 				f.read(reinterpret_cast<char*>(&(neuron->bias)), floatSize);
 			}
 		}
@@ -218,18 +214,20 @@ const void NeuralNetwork::save_to_file(std::string filename) {
 			f.write(reinterpret_cast<char*>(&(this->shape.at(pos))), intSize);
 		}
 		//looping through layers
-		//start at layer 1 as layer 0 has no information(connections)
+		//start at layer 1 as layer 0 has no information(weights/biases)
 		for (int lyr = 1; lyr < this->size; lyr++) {
 			//looping through neurons
 			NeuronLayer* layer = this->layers.at(lyr);
+			std::vector<Neuron*> layerNeurons = layer->get_neurons();
 			for (int neu = 0; neu < layer->get_size(); neu++) {
-				//looping through connections
-				Neuron* neuron = layer->get_neurons().at(neu);
-				for (int con = 0; con < neuron->inputs.size(); con++) {
-					Neuron* connection = neuron->inputs.at(con);
-					//writing neural connection info
-					f.write(reinterpret_cast<char*>(&(neuron->weights.at(con))), floatSize);
+				//looping through connection weights
+				Neuron* neuron = layerNeurons.at(neu);
+				std::vector<float> weights = neuron->weights;
+				for (int wght = 0; wght < weights.size(); wght++) {
+					//writing neural connection weight data
+					f.write(reinterpret_cast<char*>(&(weights.at(wght))), floatSize);
 				}
+				//neuron bias data
 				f.write(reinterpret_cast<char*>(&(neuron->bias)), floatSize);
 			}
 		}
@@ -248,8 +246,7 @@ const std::string NeuralNetwork::get_structure() {
 		for (int o = 0; o < this->layers[i]->get_size(); o++) {
 			output = output + "Neuron " + std::to_string(o) + ": ";
 			Neuron* neuron = this->layers[i]->get_neurons()[o];
-			std::vector<Neuron*> connections = neuron->inputs;
-			for (int u = 0; u < connections.size(); u++) {
+			for (int u = 0; u < neuron->weights.size(); u++) {
 				output = output + "(" + std::to_string(neuron->weights[u]) + "), ";
 			}
 			output = output + "[" + std::to_string(neuron->bias) + "]\n";
@@ -303,21 +300,18 @@ NeuralNetwork* NeuralNetwork::train(float(*fitnessFunc)(NeuralNetwork*), int gen
 		
 		for (NeuralNetwork* parent : parents) {
 
-			std::vector<std::vector<Neuron*>> connections;
 			for (int layer = 0; layer < parent->size; layer++) {
-
-				connections = parent->layers[layer]->get_connections();
 				std::vector<Neuron*> copyLayerNeurons = copy->layers[layer]->get_neurons();
 				std::vector<Neuron*> neurons = parent->layers[layer]->get_neurons();
 
-				for (int neuron = 0; neuron < connections.size(); neuron++) {
+				for (int neu = 0; neu < neurons.size(); neu++) {
+					Neuron* copyNeuron = copyLayerNeurons[neu];
+					Neuron* neuron = neurons[neu];
 
-					std::vector<Neuron*> copyConnections = copyLayerNeurons[neuron]->inputs;
-
-					copyLayerNeurons[neuron]->bias += (neurons[neuron]->bias)/parentCount;
-					for (int connection = 0; connection < connections[neuron].size(); connection++) {
-						copyLayerNeurons[neuron]->weights[connection] += (neurons[neuron]->weights[connection])/parentCount;
+					for (int wght = 0; wght < neuron->weights.size(); wght++) {
+						copyNeuron->weights[wght] += (neuron->weights[wght])/float(parentCount);
 					}
+					copyNeuron->bias += (neuron->bias)/float(parentCount);
 				}
 			}
 			delete(parent);
