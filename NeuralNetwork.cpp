@@ -179,11 +179,11 @@ void NeuralNetwork::load_from_file(std::string filename) {
 			for (int neu = 0; neu < layer->get_size(); neu++) {
 				//looping through connection weights
 				Neuron* neuron = layerNeurons.at(neu);
-				std::vector<float> weights = neuron->weights;
+				std::vector<float>* weights = &neuron->weights;
 				for (int wght = 0; wght < neuron->inputs.size(); wght++) {
 					if (!f) { std::cout << "Bad file read\nfail: " << f.fail() << "\nbad: " << f.bad() << "\neof: " << f.eof() << "\n"; f.close(); return; }
 					//reading neural connection weight data
-					f.read(reinterpret_cast<char*>(&(weights.at(wght))), floatSize);
+					f.read(reinterpret_cast<char*>(&(weights->at(wght))), floatSize);
 				}
 				//neuron bias data
 				f.read(reinterpret_cast<char*>(&(neuron->bias)), floatSize);
