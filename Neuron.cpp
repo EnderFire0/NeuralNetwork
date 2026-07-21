@@ -1,5 +1,6 @@
 #include "Neuron.h"
 #include <random>
+#include <cmath>
 
 std::random_device rd;
 std::mt19937 gen(rd());
@@ -19,6 +20,7 @@ void Neuron::update_activation() {
 		for (int i = 0; i < this->inputs.size(); i++) {
 			this->activation += (this->inputs[i]->activation * this->weights[i]);
 		}
+		this->activation = std::max(float(0), this->activation);
 	}
 }
 
@@ -36,5 +38,5 @@ void Neuron::random_tune(float strength) {
 	for (int i = 0; i < this->inputs.size(); i++) {
 		this->weights[i] += dis(gen) * strength;
 	}
-	this->bias += dis(gen) * strength;
+	this->bias += dis(gen) * strength * this->weights.size();
 }
