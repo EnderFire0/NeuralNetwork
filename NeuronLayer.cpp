@@ -40,7 +40,7 @@ void NeuronLayer::disconnect_input_layer() {
 void NeuronLayer::set_neuron_activations(std::vector<float> activations) {
 	if (activations.size() == size) {
 		for (int i = 0; i < size; i++) {
-			this->neurons[i]->set_activation(activations[i]);
+			this->neurons[i]->activation = activations[i];
 		}
 	}
 	else {
@@ -71,15 +71,15 @@ int NeuronLayer::get_size() {
 std::vector<float> NeuronLayer::read_neurons() {
 	std::vector<float> output = {};
 	for (int i = 0; i < this->size; i++) {
-		output.push_back(this->neurons[i]->read_activation());
+		output.push_back(this->neurons[i]->activation);
 	}
 	return output;
 }
 
-std::vector<std::vector<NeuronConnection*>> NeuronLayer::get_connections() {
-	std::vector<std::vector<NeuronConnection*>> connections = {};
+std::vector<std::vector<Neuron*>> NeuronLayer::get_connections() {
+	std::vector<std::vector<Neuron*>> connections = {};
 	for (int i = 0; i < this->size; i++) {
-		connections.push_back(this->neurons[i]->get_connections());
+		connections.push_back(this->neurons[i]->inputs);
 	}
 	return connections;
 }

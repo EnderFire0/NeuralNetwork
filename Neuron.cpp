@@ -7,14 +7,9 @@ std::uniform_real_distribution<> dis(-1.0, 1.0);
 
 Neuron::Neuron() {
 	this->inputs = {};
+	this->weights = {};
 	this->activation = 0;
 	this->bias = 0;
-}
-
-Neuron::~Neuron() {
-	for (int i = this->inputs.size() - 1; i > 0; i--) {
-		delete(this->inputs[i]);
-	}
 }
 
 void Neuron::update_activation() {
@@ -22,38 +17,24 @@ void Neuron::update_activation() {
 	if (this->inputs.size() > 0) {
 		this->activation = this->bias;
 		for (int i = 0; i < this->inputs.size(); i++) {
-			this->activation += (this->inputs[i]->input->activation * this->inputs[i]->weight);
+			this->activation += (this->inputs[i]->activation * this->weights[i]);
 		}
 	}
 }
 
-void Neuron::set_activation(float activation) {
-	this->activation = activation;
-}
-
 void Neuron::connect_neuron(Neuron* neuron, float weight) {
-	NeuronConnection* connection = new NeuronConnection(neuron, weight);
-	this->inputs.push_back(connection);
+	this->inputs.push_back(neuron);
+	this->weights.push_back(weight);
 }
 
 void Neuron::disconnect_inputs() {
-	for (int i = this->inputs.size() - 1; i >= 0; i--) {
-		delete(inputs[i]);
-	}
 	this->inputs.clear();
+	this->weights.clear();
 }
 
 void Neuron::random_tune(float strength) {
 	for (int i = 0; i < this->inputs.size(); i++) {
-		this->inputs[i]->weight += dis(gen) * strength;
+		this->weights[i] += dis(gen) * strength;
 	}
 	this->bias += dis(gen) * strength;
-}
-
-float Neuron::read_activation() {
-	return this->activation;
-}
-
-std::vector<NeuronConnection*> Neuron::get_connections() {
-	return this->inputs;
 }

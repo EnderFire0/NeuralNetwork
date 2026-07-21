@@ -23,7 +23,7 @@ public:
 
 	std::vector<float> read_neurons();
 
-	std::vector<std::vector<NeuronConnection*>> get_connections();
+	std::vector<std::vector<Neuron*>> get_connections();
 
 	std::vector<Neuron*> get_neurons();
 };
