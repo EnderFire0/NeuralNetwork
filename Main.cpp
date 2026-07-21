@@ -143,6 +143,8 @@ int main() {
 
 	NeuralNetwork* trained = base->train(score_func, 100, 200, 3);
 
+	trained->save_to_file("test.dat");
+
 	std::cout << trained->get_structure() << "\n" << trained->get_fitness();
 	
 	return 0;

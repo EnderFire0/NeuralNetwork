@@ -3,6 +3,7 @@
 
 #include "NeuronLayer.h"
 #include <string>
+#include <fstream>
 
 class NeuralNetwork {
 private:
@@ -23,6 +24,8 @@ public:
 	void modify_fitness(float fitness);
 	void insert_layer(NeuronLayer* layer, int index);
 	void random_tune_network(float strength);
+	void load_from_file(std::string filename);
+	const void save_to_file(std::string filename);
 
 	const std::string get_structure();
 

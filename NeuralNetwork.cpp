@@ -48,13 +48,13 @@ NeuralNetwork::NeuralNetwork(const NeuralNetwork& network) {
 }
 
 NeuralNetwork::~NeuralNetwork() {
-	for (int i = this->size - 1; i > 0; i--) {
+	for (int i = this->size - 1; i >= 0; i--) {
 		delete(this->layers[i]);
 	}
 }
 
 NeuralNetwork& NeuralNetwork::operator= (const NeuralNetwork& network) {
-	for (int i = this->size - 1; i > 0; i--) {
+	for (int i = this->size - 1; i >= 0; i--) {
 		delete(this->layers[i]);
 		this->layers.pop_back();
 	}
@@ -134,6 +134,108 @@ void NeuralNetwork::random_tune_network(float strength) {
 	for (int i = 0; i < this->size; i++) {
 		this->layers[i]->random_tune_neurons(strength);
 	}
+}
+
+void NeuralNetwork::load_from_file(std::string filename) {
+	//destructor to be able to modify in-place
+	for (int i = this->size - 1; i >= 0; i--) {
+		delete(this->layers[i]);
+		this->layers.pop_back();
+	}
+	this->shape = {};
+	this->size = 0;
+
+	std::uint8_t intSize;
+	std::uint8_t floatSize;
+	std::uint16_t layerCount;
+	std::vector<int> layerSizes = {};
+	
+	std::ifstream f{ filename, std::ios_base::in | std::ios_base::binary };
+	if (!f.is_open()) { return; }
+	else {
+		//reading header information to know how to read file
+		f.read(reinterpret_cast<char*>(&intSize), sizeof(std::uint8_t));
+		f.read(reinterpret_cast<char*>(&floatSize), sizeof(std::uint8_t));
+		//reading information about shape of the network
+		f.read(reinterpret_cast<char*>(&layerCount), sizeof(std::uint16_t));
+		//for (int layer = 0; layer < layerCount; layer++) { }
+		for (int layer = 0; layer < layerCount; layer++) {
+			layerSizes.push_back(0);
+			f.read(reinterpret_cast<char*>(&(layerSizes.at(layer))), intSize);
+		}
+		//closing to reduce risk while building network
+		f.close();
+	}
+	for (int layer : layerSizes) {
+		this->append_layer(new NeuronLayer(layer));
+	}
+	f.open(filename, std::ios_base::in | std::ios_base::binary);
+	if (!f.is_open()) { return; }
+	else {
+		f.seekg(4 + intSize * layerCount, std::ios::beg);//4 comes from the four bytes used to store intSize, floatSize, and layerCount
+
+		//looping through layers
+		//start at layer 1 as layer 0 has no information(connections)
+		for (int lyr = 1; lyr < layerCount; lyr++) {
+			//looping through neurons
+			NeuronLayer* layer = this->layers.at(lyr);
+			for (int neu = 0; neu < layer->get_size(); neu++) {
+				//looping through connections
+				Neuron* neuron = layer->get_neurons().at(neu);
+				for (int con = 0; con < neuron->get_connections().size(); con++) {
+					if (!f) { std::cout << "Bad file read\nfail: " << f.fail() << "\nbad: " << f.bad() << "\neof: " << f.eof() << "\n"; f.close(); return; }
+					NeuronConnection* connection = neuron->get_connections().at(con);
+					//reading neural connection info
+					f.read(reinterpret_cast<char*>(&(connection->weight)), floatSize);
+					f.read(reinterpret_cast<char*>(&(connection->bias)), floatSize);
+				}
+			}
+		}
+		//setting fitness value
+		f.read(reinterpret_cast<char*>(&(this->fitness)), floatSize);
+	}
+	f.close();
+}
+
+const void NeuralNetwork::save_to_file(std::string filename) {
+	if (!this->size) { return; }
+
+	std::uint8_t intSize = sizeof(int);
+	std::uint8_t floatSize = sizeof(float);
+	std::uint16_t layerCount = this->size;//casting to uint16_t to force consistency across architechtures
+
+	std::ofstream f{ filename , std::ios_base::out | std::ios_base::binary };
+	if (!f.is_open()) { f.close(); return; }
+	else {
+		//writing header information to make file readable across architectures
+		f.write(reinterpret_cast<char*>(&intSize), sizeof(std::uint8_t));
+		f.write(reinterpret_cast<char*>(&floatSize), sizeof(std::uint8_t));
+		//all the information about the shape of the network needed to reproduce it
+		f.write(reinterpret_cast<char*>(&layerCount), sizeof(std::uint16_t));
+		for (int pos = 0; pos < this->size; pos++) {
+			f.write(reinterpret_cast<char*>(&(this->shape.at(pos))), intSize);
+		}
+		//looping through layers
+		//start at layer 1 as layer 0 has no information(connections)
+		for (int lyr = 1; lyr < this->size; lyr++) {
+			//looping through neurons
+			NeuronLayer* layer = this->layers.at(lyr);
+			for (int neu = 0; neu < layer->get_size(); neu++) {
+				//looping through connections
+				Neuron* neuron = layer->get_neurons().at(neu);
+				for (int con = 0; con < neuron->get_connections().size(); con++) {
+					NeuronConnection* connection = neuron->get_connections().at(con);
+					//writing neural connection info
+					f.write(reinterpret_cast<char*>(&(connection->weight)), floatSize);
+					f.write(reinterpret_cast<char*>(&(connection->bias)), floatSize);
+				}
+			}
+		}
+		//writing fitness value
+		f.write(reinterpret_cast<char*>(&(this->fitness)), floatSize);
+		f.flush();
+	}
+	f.close();
 }
 
 const std::string NeuralNetwork::get_structure() {
