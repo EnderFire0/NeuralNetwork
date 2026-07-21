@@ -1,8 +1,14 @@
 #include "Neuron.h"
+#include <random>
+
+std::random_device rd;
+std::mt19937 gen(rd());
+std::uniform_real_distribution<> dis(-1.0, 1.0);
 
 Neuron::Neuron() {
 	this->inputs = {};
 	this->activation = 0;
+	this->bias = 0;
 }
 
 Neuron::~Neuron() {
@@ -14,9 +20,9 @@ Neuron::~Neuron() {
 void Neuron::update_activation() {
 	//in case that input layer get updated, avoids erroring
 	if (this->inputs.size() > 0) {
-		this->activation = 0;
+		this->activation = this->bias;
 		for (int i = 0; i < this->inputs.size(); i++) {
-			this->activation += (this->inputs[i]->input->activation * this->inputs[i]->weight) + this->inputs[i]->bias;
+			this->activation += (this->inputs[i]->input->activation * this->inputs[i]->weight);
 		}
 	}
 }
@@ -25,8 +31,8 @@ void Neuron::set_activation(float activation) {
 	this->activation = activation;
 }
 
-void Neuron::connect_neuron(Neuron* neuron, float weight, float bias) {
-	NeuronConnection* connection = new NeuronConnection(neuron, weight, bias);
+void Neuron::connect_neuron(Neuron* neuron, float weight) {
+	NeuronConnection* connection = new NeuronConnection(neuron, weight);
 	this->inputs.push_back(connection);
 }
 
@@ -37,13 +43,14 @@ void Neuron::disconnect_inputs() {
 	this->inputs.clear();
 }
 
-void Neuron::random_tune_connections(float strength) {
+void Neuron::random_tune(float strength) {
 	for (int i = 0; i < this->inputs.size(); i++) {
-		this->inputs[i]->random_tune(strength);
+		this->inputs[i]->weight += dis(gen) * strength;
 	}
+	this->bias += dis(gen) * strength;
 }
 
-float Neuron::read() {
+float Neuron::read_activation() {
 	return this->activation;
 }
 

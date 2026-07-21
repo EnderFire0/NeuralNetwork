@@ -12,13 +12,15 @@ public:
 	Neuron();
 	~Neuron();
 
+	float bias;
+
 	void update_activation();
 	void set_activation(float activation);
-	void connect_neuron(Neuron* neuron = nullptr, float weight = 1, float bias = 0);
+	void connect_neuron(Neuron* neuron = nullptr, float weight = 1);
 	void disconnect_inputs();
-	void random_tune_connections(float strength);
+	void random_tune(float strength);
 
-	float read();
+	float read_activation();
 
 	std::vector<NeuronConnection*> get_connections();
 };

@@ -33,14 +33,15 @@ NeuralNetwork::NeuralNetwork(const NeuralNetwork& network) {
 
 		connections = network.layers[layer]->get_connections();
 		std::vector<Neuron*> copyLayerNeurons = this->layers[layer]->get_neurons();
+		std::vector<Neuron*> neurons = network.layers[layer]->get_neurons();
 
 		for (int neuron = 0; neuron < connections.size(); neuron++) {
 
 			std::vector<NeuronConnection*> copyConnections = copyLayerNeurons[neuron]->get_connections();
 
+			copyLayerNeurons[neuron]->bias = neurons[neuron]->bias;
 			for (int connection = 0; connection < connections[neuron].size(); connection++) {
 				copyConnections[connection]->weight = connections[neuron][connection]->weight;
-				copyConnections[connection]->bias = connections[neuron][connection]->bias;
 			}
 		}
 	}
@@ -71,14 +72,15 @@ NeuralNetwork& NeuralNetwork::operator= (const NeuralNetwork& network) {
 
 		connections = network.layers[layer]->get_connections();
 		std::vector<Neuron*> copyLayerNeurons = this->layers[layer]->get_neurons();
+		std::vector<Neuron*> neurons = network.layers[layer]->get_neurons();
 
 		for (int neuron = 0; neuron < connections.size(); neuron++) {
 
 			std::vector<NeuronConnection*> copyConnections = copyLayerNeurons[neuron]->get_connections();
 
+			copyLayerNeurons[neuron]->bias = neurons[neuron]->bias;
 			for (int connection = 0; connection < connections[neuron].size(); connection++) {
 				copyConnections[connection]->weight = connections[neuron][connection]->weight;
-				copyConnections[connection]->bias = connections[neuron][connection]->bias;
 			}
 		}
 	}
@@ -187,8 +189,8 @@ void NeuralNetwork::load_from_file(std::string filename) {
 					NeuronConnection* connection = neuron->get_connections().at(con);
 					//reading neural connection info
 					f.read(reinterpret_cast<char*>(&(connection->weight)), floatSize);
-					f.read(reinterpret_cast<char*>(&(connection->bias)), floatSize);
 				}
+				f.read(reinterpret_cast<char*>(&(neuron->bias)), floatSize);
 			}
 		}
 		//setting fitness value
@@ -227,8 +229,8 @@ const void NeuralNetwork::save_to_file(std::string filename) {
 					NeuronConnection* connection = neuron->get_connections().at(con);
 					//writing neural connection info
 					f.write(reinterpret_cast<char*>(&(connection->weight)), floatSize);
-					f.write(reinterpret_cast<char*>(&(connection->bias)), floatSize);
 				}
+				f.write(reinterpret_cast<char*>(&(neuron->bias)), floatSize);
 			}
 		}
 		//writing fitness value
@@ -245,11 +247,12 @@ const std::string NeuralNetwork::get_structure() {
 		output = output + "Layer " + std::to_string(i) + ":\n";
 		for (int o = 0; o < this->layers[i]->get_size(); o++) {
 			output = output + "Neuron " + std::to_string(o) + ": ";
-			std::vector<NeuronConnection*> connections = this->layers[i]->get_neurons()[o]->get_connections();
+			Neuron* neuron = this->layers[i]->get_neurons()[o];
+			std::vector<NeuronConnection*> connections = neuron->get_connections();
 			for (int u = 0; u < connections.size(); u++) {
-				output = output + "(" + std::to_string(connections[u]->weight) + ", " + std::to_string(connections[u]->bias) + ") ";
+				output = output + "(" + std::to_string(connections[u]->weight) + "), ";
 			}
-			output = output + "\n";
+			output = output + "[" + std::to_string(neuron->bias) + "]\n";
 		}
 	}
 	return output;
@@ -305,14 +308,15 @@ NeuralNetwork* NeuralNetwork::train(float(*fitnessFunc)(NeuralNetwork*), int gen
 
 				connections = parent->layers[layer]->get_connections();
 				std::vector<Neuron*> copyLayerNeurons = copy->layers[layer]->get_neurons();
+				std::vector<Neuron*> neurons = parent->layers[layer]->get_neurons();
 
 				for (int neuron = 0; neuron < connections.size(); neuron++) {
 
 					std::vector<NeuronConnection*> copyConnections = copyLayerNeurons[neuron]->get_connections();
 
+					copyLayerNeurons[neuron]->bias += (neurons[neuron]->bias)/parentCount;
 					for (int connection = 0; connection < connections[neuron].size(); connection++) {
 						copyConnections[connection]->weight += (connections[neuron][connection]->weight)/parentCount;
-						copyConnections[connection]->bias += (connections[neuron][connection]->bias)/parentCount;
 					}
 				}
 			}

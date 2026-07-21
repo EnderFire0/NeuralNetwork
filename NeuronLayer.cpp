@@ -60,7 +60,7 @@ void NeuronLayer::insert_neuron(Neuron* neuron) {
 
 void NeuronLayer::random_tune_neurons(float strength) {
 	for (int i = 0; i < size; i++) {
-		this->neurons[i]->random_tune_connections(strength);
+		this->neurons[i]->random_tune(strength);
 	}
 }
 
@@ -71,7 +71,7 @@ int NeuronLayer::get_size() {
 std::vector<float> NeuronLayer::read_neurons() {
 	std::vector<float> output = {};
 	for (int i = 0; i < this->size; i++) {
-		output.push_back(this->neurons[i]->read());
+		output.push_back(this->neurons[i]->read_activation());
 	}
 	return output;
 }
