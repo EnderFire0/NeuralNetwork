@@ -1,6 +1,5 @@
 #include <iostream>
 #include <random>
-#include <cmath>
 #include <vector>
 #include <algorithm>
 #include "NeuralNetwork.h"
@@ -130,23 +129,22 @@ float blackjack_game(NeuralNetwork* network) {
 float score_func(NeuralNetwork* network) {
 	//scoring function goes here
 
-	//just a proof of concept function, feel free to rip it out when making you're own
-	float score = 0;
-	for (int i = 0; i < 10; i++) {
-		score += blackjack_game(network);
+	//just a proof of concept function, rip it out when making you're own
+	float cost = 0;
+	for (int i = 0; i < 1000; i++) {
+		cost -= blackjack_game(network);
 	}
-	return score;
+	return cost;
 }
 
 int main() {
 	NeuralNetwork* base = new NeuralNetwork({ 3, 7, 9, 7, 2 });
 
-	NeuralNetwork* trained = base->train(score_func, 10, 20, 3);
+	NeuralNetwork* trained = base->random_evolve_train(score_func, 100, 200, 3);
 
 	trained->save_to_file("test.dat");
 	trained->load_from_file("test.dat");
 
-	std::cout << trained->get_structure() << "\n" << trained->get_fitness();
-	
+	std::cout << trained->get_structure() << "\n" << trained->get_cost();
 	return 0;
 }

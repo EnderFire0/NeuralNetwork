@@ -10,7 +10,7 @@ private:
 	std::vector<NeuronLayer*> layers;
 	std::vector<int> shape;
 	int size;
-	float fitness;
+	float cost;
 public:
 	NeuralNetwork(std::vector<int> shape);
 	NeuralNetwork(const NeuralNetwork& network);
@@ -20,8 +20,8 @@ public:
 	void update_network();
 	void append_layer(NeuronLayer* layer);
 	void set_inputs(std::vector<float> inputs);
-	void reset_fitness();
-	void modify_fitness(float fitness);
+	void reset_cost();
+	void modify_cost(float cost);
 	void insert_layer(NeuronLayer* layer, int index);
 	void random_tune_network(float strength);
 	void load_from_file(std::string filename);
@@ -29,13 +29,13 @@ public:
 
 	const std::string get_structure();
 
-	const float get_fitness() { return this->fitness; };
+	const float get_cost() { return this->cost; };
 
 	const std::vector<int> get_shape();
 
 	const std::vector<float> read_output();
 
-	NeuralNetwork* train(float(*fitnessFunc)(NeuralNetwork*), int genCount, int countPerGen, int parentCount = 1, float(*tuneFunc)(int, NeuralNetwork*) = nullptr);
+	NeuralNetwork* random_evolve_train(float(*costFunc)(NeuralNetwork*), int genCount, int countPerGen, int parentCount = 1, float(*tuneFunc)(int, NeuralNetwork*) = nullptr);
 };
 
 #endif

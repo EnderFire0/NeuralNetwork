@@ -4,7 +4,7 @@
 
 const static struct
 {
-	bool operator()(NeuralNetwork* a, NeuralNetwork* b) const { return a->get_fitness() < b->get_fitness(); }
+	bool operator()(NeuralNetwork* a, NeuralNetwork* b) const { return a->get_cost() > b->get_cost(); }
 }
 sortingObj;
 
@@ -23,7 +23,7 @@ NeuralNetwork::NeuralNetwork(const NeuralNetwork& network) {
 	this->layers = {};
 	this->size = 0;
 	this->shape = {};
-	this->fitness = network.fitness;
+	this->cost = network.cost;
 	for (int i : network.shape) {
 		this->append_layer(new NeuronLayer(i));
 	}
@@ -59,7 +59,7 @@ NeuralNetwork& NeuralNetwork::operator= (const NeuralNetwork& network) {
 
 	this->size = 0;
 	this->shape = {};
-	this->fitness = network.fitness;
+	this->cost = network.cost;
 	for (int i : network.shape) {
 		this->append_layer(new NeuronLayer(i));
 	}
@@ -102,12 +102,12 @@ void NeuralNetwork::set_inputs(std::vector<float> inputs) {
 	this->layers.at(0)->set_neuron_activations(inputs);
 }
 
-void NeuralNetwork::reset_fitness() {
-	this->fitness = 0;
+void NeuralNetwork::reset_cost() {
+	this->cost = 0;
 }
 
-void NeuralNetwork::modify_fitness(float fitness) {
-	this->fitness += fitness;
+void NeuralNetwork::modify_cost(float cost) {
+	this->cost += cost;
 }
 
 //inserts the layer to be at index # "index", e.g. if layers = {a, b, c}, insert_layer(l, 1) -> layers = {a, l, b, c}
@@ -189,8 +189,8 @@ void NeuralNetwork::load_from_file(std::string filename) {
 				f.read(reinterpret_cast<char*>(&(neuron->bias)), floatSize);
 			}
 		}
-		//setting fitness value
-		f.read(reinterpret_cast<char*>(&(this->fitness)), floatSize);
+		//setting cost value
+		f.read(reinterpret_cast<char*>(&(this->cost)), floatSize);
 	}
 	f.close();
 }
@@ -231,8 +231,8 @@ const void NeuralNetwork::save_to_file(std::string filename) {
 				f.write(reinterpret_cast<char*>(&(neuron->bias)), floatSize);
 			}
 		}
-		//writing fitness value
-		f.write(reinterpret_cast<char*>(&(this->fitness)), floatSize);
+		//writing cost value
+		f.write(reinterpret_cast<char*>(&(this->cost)), floatSize);
 		f.flush();
 	}
 	f.close();
@@ -265,7 +265,7 @@ const std::vector<float> NeuralNetwork::read_output() {
 	return this->layers.back()->read_neurons();
 }
 
-NeuralNetwork* NeuralNetwork::train(float(*fitnessFunc)(NeuralNetwork*), int genCount, int countPerGen, int parentCount, float(*tuneStrengthFunc)(int, NeuralNetwork*)) {
+NeuralNetwork* NeuralNetwork::random_evolve_train(float(*costFunc)(NeuralNetwork*), int genCount, int countPerGen, int parentCount, float(*tuneStrengthFunc)(int, NeuralNetwork*)) {
 	if (parentCount < 1) { return nullptr; }
 	if (!tuneStrengthFunc) { tuneStrengthFunc = CONSTANT_ONE; }
 	
@@ -281,16 +281,16 @@ NeuralNetwork* NeuralNetwork::train(float(*fitnessFunc)(NeuralNetwork*), int gen
 			NeuralNetwork* test_member = new NeuralNetwork(*templateNet);
 			test_member->random_tune_network(tuneStrengthFunc(generation, test_member));
 
-			test_member->fitness = fitnessFunc(test_member);
+			test_member->cost = costFunc(test_member);
 			
 			if (member < parentCount) {
 				parents.at(member) = test_member;
 			}
 			else {
 				std::sort(parents.begin(), parents.end(), sortingObj);
-				if (parents.at(0)->fitness < test_member->fitness) {
-					delete(parents.at(0));
-					parents.at(0) = test_member;
+				if (parents.front()->cost > test_member->cost) {
+					delete(parents.front());
+					parents.front() = test_member;
 				}
 			}
 			
@@ -320,7 +320,7 @@ NeuralNetwork* NeuralNetwork::train(float(*fitnessFunc)(NeuralNetwork*), int gen
 		delete(templateNet);
 		templateNet = copy;
 	}
-	templateNet->fitness = fitnessFunc(templateNet);
+	templateNet->cost = costFunc(templateNet);
 
 	return templateNet;
 }
