@@ -10,6 +10,12 @@ NeuronLayer::NeuronLayer(int size) {
 	}
 }
 
+NeuronLayer::NeuronLayer(std::vector<Neuron*> neurons) {
+	this->input = nullptr;
+	this->size = neurons.size();
+	this->neurons = neurons;
+}
+
 //does not connect to any input Layer
 NeuronLayer::NeuronLayer(const NeuronLayer& layer) {
 	this->input = nullptr;

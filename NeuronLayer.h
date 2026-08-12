@@ -10,6 +10,7 @@ private:
 	int size;
 public:
 	NeuronLayer(int size = 0);
+	NeuronLayer(std::vector<Neuron*> neurons);
 	NeuronLayer(const NeuronLayer& layer);//does not connect to any input Layer
 	~NeuronLayer();
 
