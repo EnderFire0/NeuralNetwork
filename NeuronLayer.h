@@ -13,6 +13,15 @@ public:
 	NeuronLayer(const NeuronLayer& layer);//does not connect to any input Layer
 	~NeuronLayer();
 
+	NeuronLayer& operator+=(const NeuronLayer& rhs);
+
+	NeuronLayer& operator/=(const double& rhs);
+	NeuronLayer& operator/=(const float& rhs);
+	NeuronLayer& operator/=(const long& rhs);
+	NeuronLayer& operator/=(const int& rhs);
+	NeuronLayer& operator/=(const short& rhs);
+	NeuronLayer& operator/=(const char& rhs);
+
 	int get_size();
 
 	std::vector<float> read_neurons();

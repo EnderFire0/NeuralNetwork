@@ -26,6 +26,71 @@ NeuronLayer::~NeuronLayer() {
 	}
 }
 
+NeuronLayer& NeuronLayer::operator+=(const NeuronLayer& rhs) {
+	if (this->size != rhs.size) {
+		throw std::runtime_error("Incompatible size ranges");
+	}
+	if (!(this->input == nullptr || rhs.input == nullptr)) {
+		if (this->input->size != rhs.input->size) {
+			throw std::runtime_error("Incompatible size ranges");
+		}
+	}
+
+	for (int i = 0; i < this->size; i++) {
+		*(this->neurons.at(i)) += *(rhs.neurons.at(i));
+	}
+
+	return *this;
+}
+
+NeuronLayer& NeuronLayer::operator/=(const double& rhs) {
+	for (int i = 0; i < this->size; i++) {
+		*(this->neurons.at(i)) /= rhs;
+	}
+
+	return *this;
+}
+
+NeuronLayer& NeuronLayer::operator/=(const float& rhs) {
+	for (int i = 0; i < this->size; i++) {
+		*(this->neurons.at(i)) /= rhs;
+	}
+
+	return *this;
+}
+
+NeuronLayer& NeuronLayer::operator/=(const long& rhs) {
+	for (int i = 0; i < this->size; i++) {
+		*(this->neurons.at(i)) /= rhs;
+	}
+
+	return *this;
+}
+
+NeuronLayer& NeuronLayer::operator/=(const int& rhs) {
+	for (int i = 0; i < this->size; i++) {
+		*(this->neurons.at(i)) /= rhs;
+	}
+
+	return *this;
+}
+
+NeuronLayer& NeuronLayer::operator/=(const short& rhs) {
+	for (int i = 0; i < this->size; i++) {
+		*(this->neurons.at(i)) /= rhs;
+	}
+
+	return *this;
+}
+
+NeuronLayer& NeuronLayer::operator/=(const char& rhs) {
+	for (int i = 0; i < this->size; i++) {
+		*(this->neurons.at(i)) /= rhs;
+	}
+
+	return *this;
+}
+
 int NeuronLayer::get_size() {
 	return this->size;
 }

@@ -24,25 +24,19 @@ NeuralNetwork::NeuralNetwork(const NeuralNetwork& network) {
 	this->size = 0;
 	this->shape = {};
 	this->cost = network.cost;
-	for (int i : network.shape) {
-		this->append_layer(new NeuronLayer(i));
-	}
 
-	for (int layer = 0; layer < network.size; layer++) {
-		std::vector<Neuron*> copyLayerNeurons = this->layers[layer]->get_neurons();
-		std::vector<Neuron*> neurons = network.layers[layer]->get_neurons();
+	for (NeuronLayer* oldLay : network.layers) {
+		NeuronLayer* newLayer = new NeuronLayer(0);
 
-		for (int neu = 0; neu < neurons.size(); neu++) {
-			Neuron* copyNeuron = copyLayerNeurons[neu];
-			Neuron* neuron = neurons[neu];
+		std::vector<Neuron*> oldNeurons = oldLay->get_neurons();
 
-			for (int wght = 0; wght < neuron->weights.size(); wght++) {
-				copyNeuron->weights[wght] = neuron->weights[wght];
-			}
-			copyNeuron->bias = neuron->bias;
+		for (Neuron* oldNeu : oldNeurons) {
+			Neuron* newNeuron = new Neuron(*oldNeu);
+			newLayer->insert_neuron(newNeuron);
 		}
-	}
 
+		this->append_layer(newLayer);
+	}
 }
 
 NeuralNetwork::~NeuralNetwork() {
@@ -52,6 +46,10 @@ NeuralNetwork::~NeuralNetwork() {
 }
 
 NeuralNetwork& NeuralNetwork::operator= (const NeuralNetwork& network) {
+	if (this == &network) {
+		return *this;
+	}
+
 	for (int i = this->size - 1; i >= 0; i--) {
 		delete(this->layers[i]);
 		this->layers.pop_back();
@@ -60,23 +58,78 @@ NeuralNetwork& NeuralNetwork::operator= (const NeuralNetwork& network) {
 	this->size = 0;
 	this->shape = {};
 	this->cost = network.cost;
-	for (int i : network.shape) {
-		this->append_layer(new NeuronLayer(i));
+
+	for (NeuronLayer* oldLay : network.layers) {
+		NeuronLayer* newLayer = new NeuronLayer(0);
+
+		std::vector<Neuron*> oldNeurons = oldLay->get_neurons();
+
+		for (Neuron* oldNeu : oldNeurons) {
+			Neuron* newNeuron = new Neuron(*oldNeu);
+			newLayer->insert_neuron(newNeuron);
+		}
+
+		this->append_layer(newLayer);
 	}
 
-	for (int layer = 0; layer < network.size; layer++) {
-		std::vector<Neuron*> copyLayerNeurons = this->layers[layer]->get_neurons();
-		std::vector<Neuron*> neurons = network.layers[layer]->get_neurons();
+	return *this;
+}
 
-		for (int neu = 0; neu < neurons.size(); neu++) {
-			Neuron* copyNeuron = copyLayerNeurons[neu];
-			Neuron* neuron = neurons[neu];
+NeuralNetwork& NeuralNetwork::operator+=(const NeuralNetwork& rhs) {
+	if (this->shape != rhs.shape) {
+		throw std::runtime_error("Incompatbile shapes");
+	}
 
-			for (int wght = 0; wght < neuron->weights.size(); wght++) {
-				copyNeuron->weights[wght] = neuron->weights[wght];
-			}
-			copyNeuron->bias = neuron->bias;
-		}
+	for (int i = 0; i < this->size; i++) {
+		*(this->layers.at(i)) += *(rhs.layers.at(i));
+	}
+
+	return *this;
+}
+
+NeuralNetwork& NeuralNetwork::operator/=(const double& rhs) {
+	for (int i = 0; i < this->size; i++) {
+		*(this->layers.at(i)) /= rhs;
+	}
+
+	return *this;
+}
+
+NeuralNetwork& NeuralNetwork::operator/=(const float& rhs) {
+	for (int i = 0; i < this->size; i++) {
+		*(this->layers.at(i)) /= rhs;
+	}
+
+	return *this;
+}
+
+NeuralNetwork& NeuralNetwork::operator/=(const long& rhs) {
+	for (int i = 0; i < this->size; i++) {
+		*(this->layers.at(i)) /= rhs;
+	}
+
+	return *this;
+}
+
+NeuralNetwork& NeuralNetwork::operator/=(const int& rhs) {
+	for (int i = 0; i < this->size; i++) {
+		*(this->layers.at(i)) /= rhs;
+	}
+
+	return *this;
+}
+
+NeuralNetwork& NeuralNetwork::operator/=(const short& rhs) {
+	for (int i = 0; i < this->size; i++) {
+		*(this->layers.at(i)) /= rhs;
+	}
+
+	return *this;
+}
+
+NeuralNetwork& NeuralNetwork::operator/=(const char& rhs) {
+	for (int i = 0; i < this->size; i++) {
+		*(this->layers.at(i)) /= rhs;
 	}
 
 	return *this;
@@ -90,7 +143,7 @@ void NeuralNetwork::update_network() {
 }
 
 void NeuralNetwork::append_layer(NeuronLayer* layer) {
-	if (this->size > 0) {
+	if (!this->layers.empty()) {
 		layer->connect_input_layer(this->layers.back());
 	}
 	this->layers.push_back(layer);
@@ -295,27 +348,13 @@ NeuralNetwork* NeuralNetwork::random_evolve_train(float(*costFunc)(NeuralNetwork
 			}
 			
 		}
-		//slightly modified from copy constructor since I know that works well enough
 		NeuralNetwork* copy = new NeuralNetwork(templateNet->shape);
 		
 		for (NeuralNetwork* parent : parents) {
-
-			for (int layer = 0; layer < parent->size; layer++) {
-				std::vector<Neuron*> copyLayerNeurons = copy->layers[layer]->get_neurons();
-				std::vector<Neuron*> neurons = parent->layers[layer]->get_neurons();
-
-				for (int neu = 0; neu < neurons.size(); neu++) {
-					Neuron* copyNeuron = copyLayerNeurons[neu];
-					Neuron* neuron = neurons[neu];
-
-					for (int wght = 0; wght < neuron->weights.size(); wght++) {
-						copyNeuron->weights[wght] += (neuron->weights[wght])/float(parentCount);
-					}
-					copyNeuron->bias += (neuron->bias)/float(parentCount);
-				}
-			}
+			*copy += *parent;
 			delete(parent);
 		}
+		*copy /= float(parentCount);
 
 		delete(templateNet);
 		templateNet = copy;

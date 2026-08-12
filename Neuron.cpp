@@ -21,6 +21,73 @@ Neuron::Neuron(const Neuron& neuron) {
 	this->bias = neuron.bias;
 }
 
+Neuron& Neuron::operator+=(const Neuron& rhs) {
+	if (this->weights.size() != rhs.weights.size()) {
+		throw std::runtime_error("Incompatible weight ranges");
+	}
+
+	for (int i = 0; i < this->weights.size(); i++) {
+		this->weights.at(i) += rhs.weights.at(i);
+	}
+	this->bias += rhs.bias;
+
+	return *this;
+}
+
+Neuron& Neuron::operator/=(const double& rhs) {
+	for (int i = 0; i < this->weights.size(); i++) {
+		this->weights.at(i) /= rhs;
+	}
+	this->bias /= rhs;
+
+	return *this;
+}
+
+Neuron& Neuron::operator/=(const float& rhs) {
+	for (int i = 0; i < this->weights.size(); i++) {
+		this->weights.at(i) /= rhs;
+	}
+	this->bias /= rhs;
+
+	return *this;
+}
+
+Neuron& Neuron::operator/=(const long& rhs) {
+	for (int i = 0; i < this->weights.size(); i++) {
+		this->weights.at(i) /= rhs;
+	}
+	this->bias /= rhs;
+
+	return *this;
+}
+
+Neuron& Neuron::operator/=(const int& rhs) {
+	for (int i = 0; i < this->weights.size(); i++) {
+		this->weights.at(i) /= rhs;
+	}
+	this->bias /= rhs;
+
+	return *this;
+}
+
+Neuron& Neuron::operator/=(const short& rhs) {
+	for (int i = 0; i < this->weights.size(); i++) {
+		this->weights.at(i) /= rhs;
+	}
+	this->bias /= rhs;
+
+	return *this;
+}
+
+Neuron& Neuron::operator/=(const char& rhs) {
+	for (int i = 0; i < this->weights.size(); i++) {
+		this->weights.at(i) /= rhs;
+	}
+	this->bias /= rhs;
+
+	return *this;
+}
+
 void Neuron::connect_neuron(Neuron* neuron, float weight) {
 	this->inputs.push_back(neuron);
 	if (this->inputs.size() > this->weights.size()) {
