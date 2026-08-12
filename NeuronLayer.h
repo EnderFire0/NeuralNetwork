@@ -9,7 +9,7 @@ private:
 	NeuronLayer* input;
 	int size;
 public:
-	NeuronLayer(int size);
+	NeuronLayer(int size = 0);
 	~NeuronLayer();
 
 	void update_layer();

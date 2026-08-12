@@ -12,7 +12,7 @@ private:
 	int size;
 	float cost;
 public:
-	NeuralNetwork(std::vector<int> shape);
+	NeuralNetwork(std::vector<int> shape = {});
 	NeuralNetwork(const NeuralNetwork& network);
 	~NeuralNetwork();
 	NeuralNetwork& operator= (const NeuralNetwork& network);
