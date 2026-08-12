@@ -16,7 +16,7 @@ public:
 	void connect_input_layer(NeuronLayer* layer);
 	void disconnect_input_layer();
 	void set_neuron_activations(std::vector<float> activations);
-	void insert_neuron(Neuron* neuron);
+	void insert_neuron(Neuron* neuron, std::vector<float> weights = {});
 	void random_tune_neurons(float strength);
 
 	int get_size();

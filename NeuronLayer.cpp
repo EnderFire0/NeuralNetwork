@@ -48,10 +48,17 @@ void NeuronLayer::set_neuron_activations(std::vector<float> activations) {
 	}
 }
 
-void NeuronLayer::insert_neuron(Neuron* neuron) {
+void NeuronLayer::insert_neuron(Neuron* neuron, std::vector<float> weights) {
 	if (this->input != nullptr) {
-		for (int i = 0; i < this->input->size; i++) {
-			neuron->connect_neuron(this->input->neurons[i]);
+		if (weights.size() != this->size) {
+			for (int i = 0; i < this->input->size; i++) {
+				neuron->connect_neuron(this->input->neurons[i]);
+			}
+		}
+		else {
+			for (int i = 0; i < this->input->size; i++) {
+				neuron->connect_neuron(this->input->neurons[i], weights.at(i));
+			}
 		}
 	}
 	this->neurons.push_back(neuron);
