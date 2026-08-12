@@ -13,7 +13,7 @@ public:
 	Neuron();
 
 	void update_activation();
-	void connect_neuron(Neuron* neuron = nullptr, float weight = 1);
+	void connect_neuron(Neuron* neuron = nullptr, float weight = 0);
 	void disconnect_inputs();
 	void random_tune(float strength);
 };
