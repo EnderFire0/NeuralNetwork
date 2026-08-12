@@ -13,15 +13,12 @@ Neuron::Neuron() {
 	this->bias = 0;
 }
 
-void Neuron::update_activation() {
-	//in case that input layer get updated, avoids erroring
-	if (this->inputs.size() > 0) {
-		this->activation = this->bias;
-		for (int i = 0; i < this->inputs.size(); i++) {
-			this->activation += (this->inputs[i]->activation * this->weights[i]);
-		}
-		this->activation = std::max(float(0), this->activation);
-	}
+//does not connect to any input Neurons
+Neuron::Neuron(const Neuron& neuron) {
+	this->inputs = {};
+	this->activation = neuron.activation;
+	this->weights = neuron.weights;
+	this->bias = neuron.bias;
 }
 
 void Neuron::connect_neuron(Neuron* neuron, float weight) {
@@ -39,4 +36,15 @@ void Neuron::random_tune(float strength) {
 		this->weights[i] += dis(gen) * strength;
 	}
 	this->bias += dis(gen) * strength * this->weights.size();
+}
+
+void Neuron::update_activation() {
+	//in case that input layer get updated, avoids erroring
+	if (this->inputs.size() > 0) {
+		this->activation = this->bias;
+		for (int i = 0; i < this->inputs.size(); i++) {
+			this->activation += (this->inputs[i]->activation * this->weights[i]);
+		}
+		this->activation = std::max(float(0), this->activation);
+	}
 }

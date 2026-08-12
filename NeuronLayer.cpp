@@ -10,16 +10,36 @@ NeuronLayer::NeuronLayer(int size) {
 	}
 }
 
+//does not connect to any input Layer
+NeuronLayer::NeuronLayer(const NeuronLayer& layer) {
+	this->input = nullptr;
+	this->size = layer.size;
+	this->neurons = {};
+	for (Neuron* neuron : layer.neurons) {
+		this->neurons.push_back(new Neuron(*neuron));
+	}
+}
+
 NeuronLayer::~NeuronLayer() {
 	for (int i = this->size - 1; i > 0; i--) {
 		delete(this->neurons[i]);
 	}
 }
 
-void NeuronLayer::update_layer() {
+int NeuronLayer::get_size() {
+	return this->size;
+}
+
+std::vector<float> NeuronLayer::read_neurons() {
+	std::vector<float> output = {};
 	for (int i = 0; i < this->size; i++) {
-		this->neurons[i]->update_activation();
+		output.push_back(this->neurons[i]->activation);
 	}
+	return output;
+}
+
+std::vector<Neuron*> NeuronLayer::get_neurons() {
+	return this->neurons;
 }
 
 void NeuronLayer::connect_input_layer(NeuronLayer* layer) {
@@ -34,17 +54,6 @@ void NeuronLayer::connect_input_layer(NeuronLayer* layer) {
 void NeuronLayer::disconnect_input_layer() {
 	for (int i = 0; i < size; i++) {
 		this->neurons[i]->disconnect_inputs();
-	}
-}
-
-void NeuronLayer::set_neuron_activations(std::vector<float> activations) {
-	if (activations.size() == size) {
-		for (int i = 0; i < size; i++) {
-			this->neurons[i]->activation = activations[i];
-		}
-	}
-	else {
-		std::cout << "Unable to set layer neuron activations: Incorrect number of activations\n";
 	}
 }
 
@@ -71,18 +80,19 @@ void NeuronLayer::random_tune_neurons(float strength) {
 	}
 }
 
-int NeuronLayer::get_size() {
-	return this->size;
-}
-
-std::vector<float> NeuronLayer::read_neurons() {
-	std::vector<float> output = {};
-	for (int i = 0; i < this->size; i++) {
-		output.push_back(this->neurons[i]->activation);
+void NeuronLayer::set_neuron_activations(std::vector<float> activations) {
+	if (activations.size() == size) {
+		for (int i = 0; i < size; i++) {
+			this->neurons[i]->activation = activations[i];
+		}
 	}
-	return output;
+	else {
+		std::cout << "Unable to set layer neuron activations: Incorrect number of activations\n";
+	}
 }
 
-std::vector<Neuron*> NeuronLayer::get_neurons() {
-	return this->neurons;
+void NeuronLayer::update_layer() {
+	for (int i = 0; i < this->size; i++) {
+		this->neurons[i]->update_activation();
+	}
 }

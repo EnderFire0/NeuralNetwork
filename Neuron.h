@@ -11,11 +11,12 @@ public:
 	float activation;
 
 	Neuron();
+	Neuron(const Neuron& neuron);//does not connect to any input Neurons
 
-	void update_activation();
 	void connect_neuron(Neuron* neuron = nullptr, float weight = 0);
 	void disconnect_inputs();
 	void random_tune(float strength);
+	void update_activation();
 };
 
 #endif
