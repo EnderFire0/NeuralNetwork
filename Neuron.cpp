@@ -23,7 +23,9 @@ Neuron::Neuron(const Neuron& neuron) {
 
 void Neuron::connect_neuron(Neuron* neuron, float weight) {
 	this->inputs.push_back(neuron);
-	this->weights.push_back(weight);
+	if (this->inputs.size() > this->weights.size()) {
+		this->weights.push_back(weight);
+	}
 }
 
 void Neuron::disconnect_inputs() {
