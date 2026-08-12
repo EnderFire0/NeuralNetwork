@@ -10,7 +10,7 @@ public:
 	float bias;
 	float activation;
 
-	Neuron();
+	Neuron(std::vector<float> w = {}, float b = 0);
 	Neuron(const Neuron& neuron);//does not connect to any input Neurons
 
 	Neuron& operator+=(const Neuron& rhs);

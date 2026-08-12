@@ -6,11 +6,11 @@ std::random_device rd;
 std::mt19937 gen(rd());
 std::uniform_real_distribution<> dis(-1.0, 1.0);
 
-Neuron::Neuron() {
+Neuron::Neuron(std::vector<float> w, float b) {
 	this->inputs = {};
-	this->weights = {};
+	this->weights = w;
 	this->activation = 0;
-	this->bias = 0;
+	this->bias = b;
 }
 
 //does not connect to any input Neurons
