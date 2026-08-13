@@ -27,7 +27,7 @@ NeuronLayer::NeuronLayer(const NeuronLayer& layer) {
 }
 
 NeuronLayer::~NeuronLayer() {
-	for (int i = this->size - 1; i > 0; i--) {
+	for (int i = this->size - 1; i >= 0; i--) {
 		delete(this->neurons[i]);
 	}
 }

@@ -26,14 +26,14 @@ NeuralNetwork::NeuralNetwork(const NeuralNetwork& network) {
 	this->cost = network.cost;
 
 	for (NeuronLayer* oldLay : network.layers) {
-		NeuronLayer* newLayer = new NeuronLayer(0);
-
 		std::vector<Neuron*> oldNeurons = oldLay->get_neurons();
+		std::vector<Neuron*> newNeurons = {};
 
 		for (Neuron* oldNeu : oldNeurons) {
 			Neuron* newNeuron = new Neuron(*oldNeu);
-			newLayer->insert_neuron(newNeuron);
+			newNeurons.push_back(newNeuron);
 		}
+		NeuronLayer* newLayer = new NeuronLayer(newNeurons);
 
 		this->append_layer(newLayer);
 	}
@@ -319,7 +319,7 @@ const std::vector<float> NeuralNetwork::read_output() {
 }
 
 NeuralNetwork* NeuralNetwork::random_evolve_train(float(*costFunc)(NeuralNetwork*), int genCount, int countPerGen, int parentCount, float(*tuneStrengthFunc)(int, NeuralNetwork*)) {
-	if (parentCount < 1) { return nullptr; }
+	if (parentCount < 1 || genCount < 1 || countPerGen < 1 || countPerGen < parentCount) { return nullptr; }
 	if (!tuneStrengthFunc) { tuneStrengthFunc = CONSTANT_ONE; }
 	
 	NeuralNetwork* templateNet = new NeuralNetwork(*this);
@@ -345,11 +345,14 @@ NeuralNetwork* NeuralNetwork::random_evolve_train(float(*costFunc)(NeuralNetwork
 					delete(parents.front());
 					parents.front() = test_member;
 				}
+				else {
+					delete(test_member);
+				}
 			}
 			
 		}
 		NeuralNetwork* copy = new NeuralNetwork(templateNet->shape);
-		
+
 		for (NeuralNetwork* parent : parents) {
 			*copy += *parent;
 			delete(parent);
