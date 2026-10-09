@@ -318,6 +318,33 @@ const std::vector<float> NeuralNetwork::read_output() {
 	return this->layers.back()->read_neurons();
 }
 
+NeuralNetwork* NeuralNetwork::fine_tune_train(float(*costFunc)(NeuralNetwork*), int iterations) {
+	if (costFunc == nullptr) { return nullptr; }
+
+	NeuralNetwork* templateNet = new NeuralNetwork(*this);
+
+	templateNet->cost = costFunc(templateNet);
+
+	for (int i = 0; i < iterations; i++) {
+		for (int lyr = 1; lyr < templateNet->size; lyr++) {
+			std::vector<Neuron*> nrns = templateNet->layers[lyr]->get_neurons();
+			for (Neuron* nrn : nrns) {
+				int wghtCnt = nrn->weights.size();
+				for (int wght = 0; wght < wghtCnt; wght++) {
+					nrn->weights[wght] += 0.01;
+					float deltaCost = templateNet->cost - costFunc(templateNet);
+					nrn->weights[wght] += 0.1 * deltaCost - 0.01;
+					templateNet->cost = costFunc(templateNet);
+				}
+				nrn->bias += 0.01;
+				float deltaCost = templateNet->cost - costFunc(templateNet);
+				nrn->bias += 0.1 * deltaCost - 0.01;
+				templateNet->cost = costFunc(templateNet);
+			}
+		}
+	}
+}
+
 NeuralNetwork* NeuralNetwork::random_evolve_train(float(*costFunc)(NeuralNetwork*), int genCount, int countPerGen, int parentCount, float(*tuneStrengthFunc)(int, NeuralNetwork*)) {
 	if (parentCount < 1 || genCount < 1 || countPerGen < 1 || countPerGen < parentCount) { return nullptr; }
 	if (!tuneStrengthFunc) { tuneStrengthFunc = CONSTANT_ONE; }
@@ -361,8 +388,8 @@ NeuralNetwork* NeuralNetwork::random_evolve_train(float(*costFunc)(NeuralNetwork
 
 		delete(templateNet);
 		templateNet = copy;
+		templateNet->cost = costFunc(templateNet);
 	}
-	templateNet->cost = costFunc(templateNet);
 
 	return templateNet;
 }

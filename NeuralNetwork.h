@@ -45,6 +45,7 @@ public:
 
 	const std::vector<float> read_output();
 
+	NeuralNetwork* fine_tune_train(float(*costFunc)(NeuralNetwork*), int iterations);
 	NeuralNetwork* random_evolve_train(float(*costFunc)(NeuralNetwork*), int genCount, int countPerGen, int parentCount = 1, float(*tuneFunc)(int, NeuralNetwork*) = nullptr);
 };
 
