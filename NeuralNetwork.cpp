@@ -8,7 +8,7 @@ const static struct
 }
 sortingObj;
 
-static float CONSTANT_ONE(int gen, NeuralNetwork* net) { return 1; }
+static double CONSTANT_ONE(int gen, NeuralNetwork* net) { return 1; }
 
 NeuralNetwork::NeuralNetwork(std::vector<int> shape) {
 	this->layers = {};
@@ -151,7 +151,7 @@ void NeuralNetwork::append_layer(NeuronLayer* layer) {
 	this->size++;
 }
 
-void NeuralNetwork::set_inputs(std::vector<float> inputs) {
+void NeuralNetwork::set_inputs(std::vector<double> inputs) {
 	this->layers.at(0)->set_neuron_activations(inputs);
 }
 
@@ -159,7 +159,7 @@ void NeuralNetwork::reset_cost() {
 	this->cost = 0;
 }
 
-void NeuralNetwork::modify_cost(float cost) {
+void NeuralNetwork::modify_cost(double cost) {
 	this->cost += cost;
 }
 
@@ -179,7 +179,7 @@ void NeuralNetwork::insert_layer(NeuronLayer* layer, int index) {
 	}
 }
 
-void NeuralNetwork::random_tune_network(float strength) {
+void NeuralNetwork::random_tune_network(double strength) {
 	for (int i = 0; i < this->size; i++) {
 		this->layers[i]->random_tune_neurons(strength);
 	}
@@ -195,7 +195,7 @@ void NeuralNetwork::load_from_file(std::string filename) {
 	this->size = 0;
 
 	std::uint8_t intSize;
-	std::uint8_t floatSize;
+	std::uint8_t doubleSize;
 	std::uint16_t layerCount;
 	std::vector<int> layerSizes = {};
 	
@@ -204,7 +204,7 @@ void NeuralNetwork::load_from_file(std::string filename) {
 	else {
 		//reading header information to know how to read file
 		f.read(reinterpret_cast<char*>(&intSize), sizeof(std::uint8_t));
-		f.read(reinterpret_cast<char*>(&floatSize), sizeof(std::uint8_t));
+		f.read(reinterpret_cast<char*>(&doubleSize), sizeof(std::uint8_t));
 		//reading information about shape of the network
 		f.read(reinterpret_cast<char*>(&layerCount), sizeof(std::uint16_t));
 		//for (int layer = 0; layer < layerCount; layer++) { }
@@ -218,41 +218,78 @@ void NeuralNetwork::load_from_file(std::string filename) {
 	for (int layer : layerSizes) {
 		this->append_layer(new NeuronLayer(layer));
 	}
-	f.open(filename, std::ios_base::in | std::ios_base::binary);
-	if (!f.is_open()) { return; }
-	else {
-		f.seekg(4 + intSize * layerCount, std::ios::beg);//4 comes from the four bytes used to store intSize, floatSize, and layerCount
+	//bifurcate for old systems still using the old system of float rather than double
+	if (doubleSize >= 8) {
+		f.open(filename, std::ios_base::in | std::ios_base::binary);
+		if (!f.is_open()) { return; }
+		else {
+			f.seekg(4 + intSize * layerCount, std::ios::beg);//4 comes from the four bytes used to store intSize, doubleSize, and layerCount
 
-		//looping through layers
-		//start at layer 1 as layer 0 has no information(weights/biases)
-		for (int lyr = 1; lyr < layerCount; lyr++) {
-			//looping through neurons
-			NeuronLayer* layer = this->layers.at(lyr);
-			std::vector<Neuron*> layerNeurons = layer->get_neurons();
-			for (int neu = 0; neu < layer->get_size(); neu++) {
-				//looping through connection weights
-				Neuron* neuron = layerNeurons.at(neu);
-				std::vector<float>* weights = &neuron->weights;
-				for (int wght = 0; wght < neuron->inputs.size(); wght++) {
-					if (!f) { std::cout << "Bad file read\nfail: " << f.fail() << "\nbad: " << f.bad() << "\neof: " << f.eof() << "\n"; f.close(); return; }
-					//reading neural connection weight data
-					f.read(reinterpret_cast<char*>(&(weights->at(wght))), floatSize);
+			//looping through layers
+			//start at layer 1 as layer 0 has no information(weights/biases)
+			for (int lyr = 1; lyr < layerCount; lyr++) {
+				//looping through neurons
+				NeuronLayer* layer = this->layers.at(lyr);
+				std::vector<Neuron*> layerNeurons = layer->get_neurons();
+				for (int neu = 0; neu < layer->get_size(); neu++) {
+					//looping through connection weights
+					Neuron* neuron = layerNeurons.at(neu);
+					std::vector<double>* weights = &neuron->weights;
+					for (int wght = 0; wght < neuron->inputs.size(); wght++) {
+						if (!f) { std::cout << "Bad file read\nfail: " << f.fail() << "\nbad: " << f.bad() << "\neof: " << f.eof() << "\n"; f.close(); return; }
+						//reading neural connection weight data
+						f.read(reinterpret_cast<char*>(&(weights->at(wght))), doubleSize);
+					}
+					//neuron bias data
+					f.read(reinterpret_cast<char*>(&(neuron->bias)), doubleSize);
 				}
-				//neuron bias data
-				f.read(reinterpret_cast<char*>(&(neuron->bias)), floatSize);
 			}
+			//setting cost value
+			f.read(reinterpret_cast<char*>(&(this->cost)), doubleSize);
 		}
-		//setting cost value
-		f.read(reinterpret_cast<char*>(&(this->cost)), floatSize);
+		f.close();
 	}
-	f.close();
+	else {
+		float buffer = 0;
+		f.open(filename, std::ios_base::in | std::ios_base::binary);
+		if (!f.is_open()) { return; }
+		else {
+			f.seekg(4 + intSize * layerCount, std::ios::beg);//4 comes from the four bytes used to store intSize, doubleSize, and layerCount
+
+			//looping through layers
+			//start at layer 1 as layer 0 has no information(weights/biases)
+			for (int lyr = 1; lyr < layerCount; lyr++) {
+				//looping through neurons
+				NeuronLayer* layer = this->layers.at(lyr);
+				std::vector<Neuron*> layerNeurons = layer->get_neurons();
+				for (int neu = 0; neu < layer->get_size(); neu++) {
+					//looping through connection weights
+					Neuron* neuron = layerNeurons.at(neu);
+					std::vector<double>* weights = &neuron->weights;
+					for (int wght = 0; wght < neuron->inputs.size(); wght++) {
+						if (!f) { std::cout << "Bad file read\nfail: " << f.fail() << "\nbad: " << f.bad() << "\neof: " << f.eof() << "\n"; f.close(); return; }
+						//reading neural connection weight data
+						f.read(reinterpret_cast<char*>(&(buffer)), doubleSize);
+						weights->at(wght) = double(buffer);
+					}
+					//neuron bias data
+					f.read(reinterpret_cast<char*>(&(buffer)), doubleSize);
+					neuron->bias = double(buffer);
+				}
+			}
+			//setting cost value
+			f.read(reinterpret_cast<char*>(&(buffer)), doubleSize);
+			this->cost = double(buffer);
+		}
+		f.close();
+	}
 }
 
 const void NeuralNetwork::save_to_file(std::string filename) {
 	if (!this->size) { return; }
 
 	std::uint8_t intSize = sizeof(int);
-	std::uint8_t floatSize = sizeof(float);
+	std::uint8_t doubleSize = sizeof(double);
 	std::uint16_t layerCount = this->size;//casting to uint16_t to force consistency across architechtures
 
 	std::ofstream f{ filename , std::ios_base::out | std::ios_base::binary };
@@ -260,7 +297,7 @@ const void NeuralNetwork::save_to_file(std::string filename) {
 	else {
 		//writing header information to make file readable across architectures
 		f.write(reinterpret_cast<char*>(&intSize), sizeof(std::uint8_t));
-		f.write(reinterpret_cast<char*>(&floatSize), sizeof(std::uint8_t));
+		f.write(reinterpret_cast<char*>(&doubleSize), sizeof(std::uint8_t));
 		//all the information about the shape of the network needed to reproduce it
 		f.write(reinterpret_cast<char*>(&layerCount), sizeof(std::uint16_t));
 		for (int pos = 0; pos < this->size; pos++) {
@@ -275,17 +312,17 @@ const void NeuralNetwork::save_to_file(std::string filename) {
 			for (int neu = 0; neu < layer->get_size(); neu++) {
 				//looping through connection weights
 				Neuron* neuron = layerNeurons.at(neu);
-				std::vector<float> weights = neuron->weights;
+				std::vector<double> weights = neuron->weights;
 				for (int wght = 0; wght < weights.size(); wght++) {
 					//writing neural connection weight data
-					f.write(reinterpret_cast<char*>(&(weights.at(wght))), floatSize);
+					f.write(reinterpret_cast<char*>(&(weights.at(wght))), doubleSize);
 				}
 				//neuron bias data
-				f.write(reinterpret_cast<char*>(&(neuron->bias)), floatSize);
+				f.write(reinterpret_cast<char*>(&(neuron->bias)), doubleSize);
 			}
 		}
 		//writing cost value
-		f.write(reinterpret_cast<char*>(&(this->cost)), floatSize);
+		f.write(reinterpret_cast<char*>(&(this->cost)), doubleSize);
 		f.flush();
 	}
 	f.close();
@@ -314,11 +351,11 @@ const std::vector<int> NeuralNetwork::get_shape() {
 	return shape;
 }
 
-const std::vector<float> NeuralNetwork::read_output() {
+const std::vector<double> NeuralNetwork::read_output() {
 	return this->layers.back()->read_neurons();
 }
 
-NeuralNetwork* NeuralNetwork::fine_tune_train(float(*costFunc)(NeuralNetwork*), int iterations) {
+NeuralNetwork* NeuralNetwork::fine_tune_train(double(*costFunc)(NeuralNetwork*), int iterations) {
 	if (costFunc == nullptr) { return nullptr; }
 
 	NeuralNetwork* templateNet = new NeuralNetwork(*this);
@@ -331,21 +368,22 @@ NeuralNetwork* NeuralNetwork::fine_tune_train(float(*costFunc)(NeuralNetwork*), 
 			for (Neuron* nrn : nrns) {
 				int wghtCnt = nrn->weights.size();
 				for (int wght = 0; wght < wghtCnt; wght++) {
-					nrn->weights[wght] += 0.01;
-					float deltaCost = templateNet->cost - costFunc(templateNet);
-					nrn->weights[wght] += 0.1 * deltaCost - 0.01;
+					nrn->weights[wght] += 0.1;
+					double deltaCost = templateNet->cost - costFunc(templateNet);
+					nrn->weights[wght] += 0.01 * deltaCost - 0.1;
 					templateNet->cost = costFunc(templateNet);
 				}
-				nrn->bias += 0.01;
-				float deltaCost = templateNet->cost - costFunc(templateNet);
-				nrn->bias += 0.1 * deltaCost - 0.01;
+				nrn->bias += 0.1;
+				double deltaCost = templateNet->cost - costFunc(templateNet);
+				nrn->bias += 0.1 * deltaCost - 0.1;
 				templateNet->cost = costFunc(templateNet);
 			}
 		}
 	}
+	return templateNet;
 }
 
-NeuralNetwork* NeuralNetwork::random_evolve_train(float(*costFunc)(NeuralNetwork*), int genCount, int countPerGen, int parentCount, float(*tuneStrengthFunc)(int, NeuralNetwork*)) {
+NeuralNetwork* NeuralNetwork::random_evolve_train(double(*costFunc)(NeuralNetwork*), int genCount, int countPerGen, int parentCount, double(*tuneStrengthFunc)(int, NeuralNetwork*)) {
 	if (parentCount < 1 || genCount < 1 || countPerGen < 1 || countPerGen < parentCount) { return nullptr; }
 	if (!tuneStrengthFunc) { tuneStrengthFunc = CONSTANT_ONE; }
 	
@@ -384,7 +422,7 @@ NeuralNetwork* NeuralNetwork::random_evolve_train(float(*costFunc)(NeuralNetwork
 			*copy += *parent;
 			delete(parent);
 		}
-		*copy /= float(parentCount);
+		*copy /= double(parentCount);
 
 		delete(templateNet);
 		templateNet = copy;

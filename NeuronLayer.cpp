@@ -101,8 +101,8 @@ int NeuronLayer::get_size() {
 	return this->size;
 }
 
-std::vector<float> NeuronLayer::read_neurons() {
-	std::vector<float> output = {};
+std::vector<double> NeuronLayer::read_neurons() {
+	std::vector<double> output = {};
 	for (int i = 0; i < this->size; i++) {
 		output.push_back(this->neurons[i]->activation);
 	}
@@ -128,7 +128,7 @@ void NeuronLayer::disconnect_input_layer() {
 	}
 }
 
-void NeuronLayer::insert_neuron(Neuron* neuron, std::vector<float> weights) {
+void NeuronLayer::insert_neuron(Neuron* neuron, std::vector<double> weights) {
 	if (this->input != nullptr) {
 		if (weights.size() != this->size) {
 			for (int i = 0; i < this->input->size; i++) {
@@ -145,13 +145,13 @@ void NeuronLayer::insert_neuron(Neuron* neuron, std::vector<float> weights) {
 	this->size++;
 }
 
-void NeuronLayer::random_tune_neurons(float strength) {
+void NeuronLayer::random_tune_neurons(double strength) {
 	for (int i = 0; i < size; i++) {
 		this->neurons[i]->random_tune(strength);
 	}
 }
 
-void NeuronLayer::set_neuron_activations(std::vector<float> activations) {
+void NeuronLayer::set_neuron_activations(std::vector<double> activations) {
 	if (activations.size() == size) {
 		for (int i = 0; i < size; i++) {
 			this->neurons[i]->activation = activations[i];

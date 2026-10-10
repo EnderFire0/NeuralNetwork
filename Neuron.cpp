@@ -6,7 +6,7 @@ std::random_device rd;
 std::mt19937 gen(rd());
 std::uniform_real_distribution<> dis(-1.0, 1.0);
 
-Neuron::Neuron(std::vector<float> w, float b) {
+Neuron::Neuron(std::vector<double> w, double b) {
 	this->inputs = {};
 	this->weights = w;
 	this->activation = 0;
@@ -88,7 +88,7 @@ Neuron& Neuron::operator/=(const char& rhs) {
 	return *this;
 }
 
-void Neuron::connect_neuron(Neuron* neuron, float weight) {
+void Neuron::connect_neuron(Neuron* neuron, double weight) {
 	this->inputs.push_back(neuron);
 	if (this->inputs.size() > this->weights.size()) {
 		this->weights.push_back(weight);
@@ -100,7 +100,7 @@ void Neuron::disconnect_inputs() {
 	this->weights.clear();
 }
 
-void Neuron::random_tune(float strength) {
+void Neuron::random_tune(double strength) {
 	for (int i = 0; i < this->inputs.size(); i++) {
 		this->weights[i] += dis(gen) * strength;
 	}
@@ -114,6 +114,6 @@ void Neuron::update_activation() {
 		for (int i = 0; i < this->inputs.size(); i++) {
 			this->activation += (this->inputs[i]->activation * this->weights[i]);
 		}
-		this->activation = std::max(float(0), this->activation);
+		this->activation = std::max(double(0), this->activation);
 	}
 }

@@ -25,15 +25,15 @@ public:
 
 	int get_size();
 
-	std::vector<float> read_neurons();
+	std::vector<double> read_neurons();
 
 	std::vector<Neuron*> get_neurons();
 
 	void connect_input_layer(NeuronLayer* layer);
 	void disconnect_input_layer();
-	void insert_neuron(Neuron* neuron, std::vector<float> weights = {});
-	void random_tune_neurons(float strength);
-	void set_neuron_activations(std::vector<float> activations);
+	void insert_neuron(Neuron* neuron, std::vector<double> weights = {});
+	void random_tune_neurons(double strength);
+	void set_neuron_activations(std::vector<double> activations);
 	void update_layer();
 };
 
